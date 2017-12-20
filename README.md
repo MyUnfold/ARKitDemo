@@ -34,10 +34,10 @@ guard let cameraTransform = session.currentFrame?.camera.transform,
     statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
     return
 }
-        
+
 virtualObjectInteraction.selectedObject = virtualObject
 virtualObject.setPosition(focusSquarePosition, relativeTo: cameraTransform, smoothMovement: false)
-        
+
 updateQueue.async {
     self.sceneView.scene.rootNode.addChildNode(virtualObject)
 }
@@ -86,7 +86,7 @@ for index in 0..<gesture.numberOfTouches {
         return object
     }
 }
-        
+
 // As a last resort look for an object under the center of the touches.
 return sceneView.virtualObject(at: gesture.center(in: view))
 ```
