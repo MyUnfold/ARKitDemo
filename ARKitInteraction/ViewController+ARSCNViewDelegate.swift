@@ -16,7 +16,13 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
             self.virtualObjectInteraction.updateObjectToCurrentTrackingPosition()
             self.updateFocusSquare()
         }
-        
+		
+		// If the object selection menu is open, update availability of items
+		if objectsViewController != nil {
+			let planeAnchor = focusSquare.currentPlaneAnchor
+			objectsViewController?.updateObjectAvailability(for: planeAnchor)
+		}
+		
         // If light estimation is enabled, update the intensity of the model's lights and the environment map
         let baseIntensity: CGFloat = 40
         let lightingEnvironment = sceneView.scene.lightingEnvironment
@@ -44,10 +50,16 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
-        guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
         updateQueue.async {
-            for object in self.virtualObjectLoader.loadedObjects {
-                object.adjustOntoPlaneAnchor(planeAnchor, using: node)
+            if let planeAnchor = anchor as? ARPlaneAnchor {
+                for object in self.virtualObjectLoader.loadedObjects {
+                    object.adjustOntoPlaneAnchor(planeAnchor, using: node)
+                }
+            } else {
+                if let objectAtAnchor = self.virtualObjectLoader.loadedObjects.first(where: { $0.anchor == anchor }) {
+                    objectAtAnchor.simdPosition = anchor.transform.translation
+                    objectAtAnchor.anchor = anchor
+                }
             }
         }
     }
@@ -60,6 +72,9 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
             statusViewController.escalateFeedback(for: camera.trackingState, inSeconds: 3.0)
         case .normal:
             statusViewController.cancelScheduledMessage(for: .trackingStateEscalation)
+			
+			// Unhide content after successful relocalization.
+			virtualObjectLoader.loadedObjects.forEach { $0.isHidden = false }
         }
     }
     
@@ -82,17 +97,17 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
     }
     
     func sessionWasInterrupted(_ session: ARSession) {
-        blurView.isHidden = false
-        statusViewController.showMessage("""
-        SESSION INTERRUPTED
-        The session will be reset after the interruption has ended.
-        """, autoHide: false)
+		// Hide content before going into the background.
+		virtualObjectLoader.loadedObjects.forEach { $0.isHidden = true }
     }
-    
-    func sessionInterruptionEnded(_ session: ARSession) {
-        blurView.isHidden = true
-        statusViewController.showMessage("RESETTING SESSION")
-        
-        restartExperience()
-    }
+	
+	func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool {
+        /*
+         Allow the session to attempt to resume after an interruption.
+         This process may not succeed, so the app must be prepared
+         to reset the session if the relocalizing status continues
+         for a long time -- see `escalateFeedback` in `StatusViewController`.
+         */
+		return true
+	}
 }

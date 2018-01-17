@@ -40,7 +40,7 @@ class VirtualObjectLoader {
     // MARK: - Removing Objects
     
     func removeAllVirtualObjects() {
-        // Reverse the indicies so we don't trample over indicies as objects are removed.
+        // Reverse the indices so we don't trample over indices as objects are removed.
         for index in loadedObjects.indices.reversed() {
             removeVirtualObject(at: index)
         }

@@ -6,7 +6,7 @@ Methods on the main view controller for handling virtual object loading and move
 */
 
 import UIKit
-import SceneKit
+import ARKit
 
 extension ViewController: VirtualObjectSelectionViewControllerDelegate {
     /**
@@ -18,16 +18,30 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
      */
     func placeVirtualObject(_ virtualObject: VirtualObject) {
         guard let cameraTransform = session.currentFrame?.camera.transform,
-            let focusSquarePosition = focusSquare.lastPosition else {
-            statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
+			let focusSquareAlignment = focusSquare.recentFocusSquareAlignments.last,
+			focusSquare.state != .initializing else {
+            	statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
+				if let controller = objectsViewController {
+					virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
+				}
             return
         }
-        
+		
+		// The focus square transform may contain a scale component, so reset scale to 1
+		let focusSquareScaleInverse = 1.0 / focusSquare.simdScale.x
+        let scaleMatrix = float4x4(uniformScale: focusSquareScaleInverse)
+		let focusSquareTransformWithoutScale = focusSquare.simdWorldTransform * scaleMatrix
+		
         virtualObjectInteraction.selectedObject = virtualObject
-        virtualObject.setPosition(focusSquarePosition, relativeTo: cameraTransform, smoothMovement: false)
+		virtualObject.setTransform(focusSquareTransformWithoutScale,
+								   relativeTo: cameraTransform,
+								   smoothMovement: false,
+								   alignment: focusSquareAlignment,
+								   allowAnimation: false)
         
         updateQueue.async {
             self.sceneView.scene.rootNode.addChildNode(virtualObject)
+			self.sceneView.addOrUpdateAnchor(for: virtualObject)
         }
     }
     
@@ -49,6 +63,10 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
             fatalError("Programmer error: Failed to lookup virtual object in scene.")
         }
         virtualObjectLoader.removeVirtualObject(at: objectIndex)
+		virtualObjectInteraction.selectedObject = nil
+		if let anchor = object.anchor {
+			session.remove(anchor: anchor)
+		}
     }
 
     // MARK: Object Loading UI

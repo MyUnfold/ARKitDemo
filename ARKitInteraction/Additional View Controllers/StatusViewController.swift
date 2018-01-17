@@ -151,6 +151,8 @@ extension ARCamera.TrackingState {
             return "TRACKING LIMITED\nLow detail"
         case .limited(.initializing):
             return "Initializing"
+		case .limited(.relocalizing):
+			return "Recovering from interruption"
         }
     }
 
@@ -160,7 +162,9 @@ extension ARCamera.TrackingState {
             return "Try slowing down your movement, or reset the session."
         case .limited(.insufficientFeatures):
             return "Try pointing at a flat surface, or reset the session."
-        default:
+		case .limited(.relocalizing):
+			return "Return to the location where you left off or try resetting the session."
+		default:
             return nil
         }
     }

@@ -29,6 +29,9 @@ class ViewController: UIViewController {
     lazy var statusViewController: StatusViewController = {
         return childViewControllers.lazy.flatMap({ $0 as? StatusViewController }).first!
     }()
+	
+	/// The view controller that displays the virtual object selection menu.
+	var objectsViewController: VirtualObjectSelectionViewController?
     
     // MARK: - ARKit Configuration Properties
     
@@ -125,8 +128,10 @@ class ViewController: UIViewController {
     
     /// Creates a new AR configuration to run on the `session`.
 	func resetTracking() {
+		virtualObjectInteraction.selectedObject = nil
+		
         let configuration = ARWorldTrackingConfiguration()
-        configuration.planeDetection = .horizontal
+        configuration.planeDetection = [.horizontal, .vertical]
 		session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
 
         statusViewController.scheduleMessage("FIND A SURFACE TO PLACE AN OBJECT", inSeconds: 7.5, messageType: .planeEstimation)
@@ -145,27 +150,22 @@ class ViewController: UIViewController {
             focusSquare.unhide()
             statusViewController.scheduleMessage("TRY MOVING LEFT OR RIGHT", inSeconds: 5.0, messageType: .focusSquare)
         }
-        
-        // We should always have a valid world position unless the sceen is just being initialized.
-        guard let (worldPosition, planeAnchor, _) = sceneView.worldPosition(fromScreenPosition: screenCenter, objectPosition: focusSquare.lastPosition) else {
-            updateQueue.async {
-                self.focusSquare.state = .initializing
-                self.sceneView.pointOfView?.addChildNode(self.focusSquare)
-            }
-            addObjectButton.isHidden = true
-            return
-        }
-        
-        updateQueue.async {
-            self.sceneView.scene.rootNode.addChildNode(self.focusSquare)
-            let camera = self.session.currentFrame?.camera
-            
-            if let planeAnchor = planeAnchor {
-                self.focusSquare.state = .planeDetected(anchorPosition: worldPosition, planeAnchor: planeAnchor, camera: camera)
-            } else {
-                self.focusSquare.state = .featuresDetected(anchorPosition: worldPosition, camera: camera)
-            }
-        }
+		
+		if let result = self.sceneView.smartHitTest(screenCenter) {
+			updateQueue.async {
+				self.sceneView.scene.rootNode.addChildNode(self.focusSquare)
+				let camera = self.session.currentFrame?.camera
+				self.focusSquare.state = .detecting(hitTestResult: result, camera: camera)
+			}
+		} else {
+			updateQueue.async {
+				self.focusSquare.state = .initializing
+				self.sceneView.pointOfView?.addChildNode(self.focusSquare)
+			}
+			self.addObjectButton.isHidden = true
+			return
+		}
+		
         addObjectButton.isHidden = false
         statusViewController.cancelScheduledMessage(for: .focusSquare)
 	}
