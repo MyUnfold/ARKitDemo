@@ -38,12 +38,12 @@ When the user chooses a virtual object to place, the sample app's [`setPosition(
 		}
           return
       }
-		
+
 // The focus square transform may contain a scale component, so reset scale to 1
 let focusSquareScaleInverse = 1.0 / focusSquare.simdScale.x
       let scaleMatrix = float4x4(uniformScale: focusSquareScaleInverse)
 let focusSquareTransformWithoutScale = focusSquare.simdWorldTransform * scaleMatrix
-		
+
       virtualObjectInteraction.selectedObject = virtualObject
 virtualObject.setTransform(focusSquareTransformWithoutScale,
 						   relativeTo: cameraTransform,
@@ -107,7 +107,7 @@ for index in 0..<gesture.numberOfTouches {
         return object
     }
 }
-        
+
 // As a last resort look for an object under the center of the touches.
 return sceneView.virtualObject(at: gesture.center(in: view))
 ```

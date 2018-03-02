@@ -208,7 +208,7 @@ extension VirtualObject {
 
         let fileEnumerator = FileManager().enumerator(at: modelsURL, includingPropertiesForKeys: [])!
 
-        return fileEnumerator.flatMap { element in
+        return fileEnumerator.compactMap { element in
             let url = element as! URL
 
             guard url.pathExtension == "scn" else { return nil }

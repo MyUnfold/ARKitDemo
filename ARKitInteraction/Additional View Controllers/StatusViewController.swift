@@ -81,7 +81,7 @@ class StatusViewController: UIViewController {
         timers[messageType] = timer
 	}
     
-    func cancelScheduledMessage(`for` messageType: MessageType) {
+    func cancelScheduledMessage(for messageType: MessageType) {
         timers[messageType]?.invalidate()
         timers[messageType] = nil
     }
