@@ -151,23 +151,22 @@ class ViewController: UIViewController {
             statusViewController.scheduleMessage("TRY MOVING LEFT OR RIGHT", inSeconds: 5.0, messageType: .focusSquare)
         }
 		
-		if let result = self.sceneView.smartHitTest(screenCenter) {
-			updateQueue.async {
-				self.sceneView.scene.rootNode.addChildNode(self.focusSquare)
-				let camera = self.session.currentFrame?.camera
-				self.focusSquare.state = .detecting(hitTestResult: result, camera: camera)
-			}
-		} else {
-			updateQueue.async {
-				self.focusSquare.state = .initializing
-				self.sceneView.pointOfView?.addChildNode(self.focusSquare)
-			}
-			self.addObjectButton.isHidden = true
-			return
-		}
-		
-        addObjectButton.isHidden = false
-        statusViewController.cancelScheduledMessage(for: .focusSquare)
+        // Perform hit testing only when ARKit tracking is in a good state.
+        if let camera = session.currentFrame?.camera, case .normal = camera.trackingState,
+            let result = self.sceneView.smartHitTest(screenCenter) {
+            updateQueue.async {
+                self.sceneView.scene.rootNode.addChildNode(self.focusSquare)
+                self.focusSquare.state = .detecting(hitTestResult: result, camera: camera)
+            }
+            addObjectButton.isHidden = false
+            statusViewController.cancelScheduledMessage(for: .focusSquare)
+        } else {
+            updateQueue.async {
+                self.focusSquare.state = .initializing
+                self.sceneView.pointOfView?.addChildNode(self.focusSquare)
+            }
+            addObjectButton.isHidden = true
+        }
 	}
     
 	// MARK: - Error handling
