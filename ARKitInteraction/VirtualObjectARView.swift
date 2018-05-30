@@ -17,32 +17,32 @@ class VirtualObjectARView: ARSCNView {
         let hitTestOptions: [SCNHitTestOption: Any] = [.boundingBoxOnly: true]
         let hitTestResults = hitTest(point, options: hitTestOptions)
         
-        return hitTestResults.lazy.flatMap { result in
+        return hitTestResults.lazy.compactMap { result in
             return VirtualObject.existingObjectContainingNode(result.node)
         }.first
     }
-	
+    
     func smartHitTest(_ point: CGPoint,
                       infinitePlane: Bool = false,
                       objectPosition: float3? = nil,
                       allowedAlignments: [ARPlaneAnchor.Alignment] = [.horizontal, .vertical]) -> ARHitTestResult? {
-		
-		// Perform the hit test.
-		let results = hitTest(point, types: [.existingPlaneUsingGeometry, .estimatedVerticalPlane, .estimatedHorizontalPlane])
-		
-		// 1. Check for a result on an existing plane using geometry.
+        
+        // Perform the hit test.
+        let results = hitTest(point, types: [.existingPlaneUsingGeometry, .estimatedVerticalPlane, .estimatedHorizontalPlane])
+        
+        // 1. Check for a result on an existing plane using geometry.
         if let existingPlaneUsingGeometryResult = results.first(where: { $0.type == .existingPlaneUsingGeometry }),
             let planeAnchor = existingPlaneUsingGeometryResult.anchor as? ARPlaneAnchor, allowedAlignments.contains(planeAnchor.alignment) {
             return existingPlaneUsingGeometryResult
-		}
-		
-		if infinitePlane {
-			
-			// 2. Check for a result on an existing plane, assuming its dimensions are infinite.
-			//    Loop through all hits against infinite existing planes and either return the
-			//    nearest one (vertical planes) or return the nearest one which is within 5 cm
-			//    of the object's position.
-			let infinitePlaneResults = hitTest(point, types: .existingPlane)
+        }
+        
+        if infinitePlane {
+            
+            // 2. Check for a result on an existing plane, assuming its dimensions are infinite.
+            //    Loop through all hits against infinite existing planes and either return the
+            //    nearest one (vertical planes) or return the nearest one which is within 5 cm
+            //    of the object's position.
+            let infinitePlaneResults = hitTest(point, types: .existingPlane)
             
             for infinitePlaneResult in infinitePlaneResults {
                 if let planeAnchor = infinitePlaneResult.anchor as? ARPlaneAnchor, allowedAlignments.contains(planeAnchor.alignment) {
@@ -63,11 +63,11 @@ class VirtualObjectARView: ARSCNView {
                     }
                 }
             }
-		}
-		
-		// 3. As a final fallback, check for a result on estimated planes.
-		let vResult = results.first(where: { $0.type == .estimatedVerticalPlane })
-		let hResult = results.first(where: { $0.type == .estimatedHorizontalPlane })
+        }
+        
+        // 3. As a final fallback, check for a result on estimated planes.
+        let vResult = results.first(where: { $0.type == .estimatedVerticalPlane })
+        let hResult = results.first(where: { $0.type == .estimatedHorizontalPlane })
         switch (allowedAlignments.contains(.horizontal), allowedAlignments.contains(.vertical)) {
             case (true, false):
                 return hResult
@@ -84,21 +84,62 @@ class VirtualObjectARView: ARSCNView {
             default:
                 return nil
         }
-	}
-	
-	// - MARK: Object anchors
-	/// - Tag: AddOrUpdateAnchor
-	func addOrUpdateAnchor(for object: VirtualObject) {
-		// If the anchor is not nil, remove it from the session.
-		if let anchor = object.anchor {
-			session.remove(anchor: anchor)
-		}
-		
-		// Create a new anchor with the object's current transform and add it to the session
-		let newAnchor = ARAnchor(transform: object.simdWorldTransform)
-		object.anchor = newAnchor
-		session.add(anchor: newAnchor)
-	}
+    }
+    
+    // - MARK: Object anchors
+    /// - Tag: AddOrUpdateAnchor
+    func addOrUpdateAnchor(for object: VirtualObject) {
+        // If the anchor is not nil, remove it from the session.
+        if let anchor = object.anchor {
+            session.remove(anchor: anchor)
+        }
+        
+        // Create a new anchor with the object's current transform and add it to the session
+        let newAnchor = ARAnchor(transform: object.simdWorldTransform)
+        object.anchor = newAnchor
+        session.add(anchor: newAnchor)
+    }
+    
+    // - MARK: Lighting
+    
+    var lightingRootNode: SCNNode? {
+        return scene.rootNode.childNode(withName: "lightingRootNode", recursively: true)
+    }
+    
+    func setupDirectionalLighting(queue: DispatchQueue) {
+        guard self.lightingRootNode == nil else {
+            return
+        }
+        
+        // Add directional lighting for dynamic highlights in addition to environment-based lighting.
+        guard let lightingScene = SCNScene(named: "lighting.scn", inDirectory: "Models.scnassets", options: nil) else {
+            print("Error setting up directional lights: Could not find lighting scene in resources.")
+            return
+        }
+        
+        let lightingRootNode = SCNNode()
+        lightingRootNode.name = "lightingRootNode"
+        
+        for node in lightingScene.rootNode.childNodes where node.light != nil {
+            lightingRootNode.addChildNode(node)
+        }
+        
+        queue.async {
+            self.scene.rootNode.addChildNode(lightingRootNode)
+        }
+    }
+    
+    func updateDirectionalLighting(intensity: CGFloat, queue: DispatchQueue) {
+        guard let lightingRootNode = self.lightingRootNode else {
+            return
+        }
+        
+        queue.async {
+            for node in lightingRootNode.childNodes {
+                node.light?.intensity = intensity
+            }
+        }
+    }
 }
 
 extension SCNView {

@@ -18,63 +18,63 @@ class VirtualObject: SCNReferenceNode {
     
     /// Use average of recent virtual object distances to avoid rapid changes in object scale.
     private var recentVirtualObjectDistances = [Float]()
-	
-	/// Allowed alignments for the virtual object
-	var allowedAlignments: [ARPlaneAnchor.Alignment] {
-		if modelName == "sticky note" {
-			return [.horizontal, .vertical]
-		} else if modelName == "painting" {
-			return [.vertical]
-		} else {
-			return [.horizontal]
-		}
-	}
-	
-	/// Current alignment of the virtual object
-	var currentAlignment: ARPlaneAnchor.Alignment = .horizontal
-	
-	/// Whether the object is currently changing alignment
-	private var isChangingAlignment: Bool = false
-	
-	/// For correct rotation on horizontal and vertical surfaces, roate around
-	/// local y rather than world y. Therefore rotate first child note instead of self.
-	var objectRotation: Float {
-		get {
-			return childNodes.first!.eulerAngles.y
-		}
-		set (newValue) {
-			var normalized = newValue.truncatingRemainder(dividingBy: 2 * .pi)
-			normalized = (normalized + 2 * .pi).truncatingRemainder(dividingBy: 2 * .pi)
-			if normalized > .pi {
-				normalized -= 2 * .pi
-			}
-			childNodes.first!.eulerAngles.y = normalized
-			if currentAlignment == .horizontal {
-				rotationWhenAlignedHorizontally = normalized
-			}
-		}
-	}
-	
-	/// Remember the last rotation for horizontal alignment
-	var rotationWhenAlignedHorizontally: Float = 0
-	
-	/// The object's corresponding ARAnchor
-	var anchor: ARAnchor?
+    
+    /// Allowed alignments for the virtual object
+    var allowedAlignments: [ARPlaneAnchor.Alignment] {
+        if modelName == "sticky note" {
+            return [.horizontal, .vertical]
+        } else if modelName == "painting" {
+            return [.vertical]
+        } else {
+            return [.horizontal]
+        }
+    }
+    
+    /// Current alignment of the virtual object
+    var currentAlignment: ARPlaneAnchor.Alignment = .horizontal
+    
+    /// Whether the object is currently changing alignment
+    private var isChangingAlignment: Bool = false
+    
+    /// For correct rotation on horizontal and vertical surfaces, roate around
+    /// local y rather than world y. Therefore rotate first child note instead of self.
+    var objectRotation: Float {
+        get {
+            return childNodes.first!.eulerAngles.y
+        }
+        set (newValue) {
+            var normalized = newValue.truncatingRemainder(dividingBy: 2 * .pi)
+            normalized = (normalized + 2 * .pi).truncatingRemainder(dividingBy: 2 * .pi)
+            if normalized > .pi {
+                normalized -= 2 * .pi
+            }
+            childNodes.first!.eulerAngles.y = normalized
+            if currentAlignment == .horizontal {
+                rotationWhenAlignedHorizontally = normalized
+            }
+        }
+    }
+    
+    /// Remember the last rotation for horizontal alignment
+    var rotationWhenAlignedHorizontally: Float = 0
+    
+    /// The object's corresponding ARAnchor
+    var anchor: ARAnchor?
     
     /// Resets the object's position smoothing.
     func reset() {
         recentVirtualObjectDistances.removeAll()
     }
-	
-	// MARK: - Helper methods to determine supported placement options
-	
-	func isPlacementValid(on planeAnchor: ARPlaneAnchor?) -> Bool {
-		if let anchor = planeAnchor {
-			return allowedAlignments.contains(anchor.alignment)
-		}
-		return true
-	}
-	
+    
+    // MARK: - Helper methods to determine supported placement options
+    
+    func isPlacementValid(on planeAnchor: ARPlaneAnchor?) -> Bool {
+        if let anchor = planeAnchor {
+            return allowedAlignments.contains(anchor.alignment)
+        }
+        return true
+    }
+    
     /**
      Set the object's position based on the provided position relative to the `cameraTransform`.
      If `smoothMovement` is true, the new position will be averaged with previous position to
@@ -115,63 +115,63 @@ class VirtualObject: SCNReferenceNode {
         } else {
             simdPosition = cameraWorldPosition + positionOffsetFromCamera
         }
-		
-		updateAlignment(to: alignment, transform: newTransform, allowAnimation: allowAnimation)
+        
+        updateAlignment(to: alignment, transform: newTransform, allowAnimation: allowAnimation)
     }
-	
-	// MARK: - Setting the object's alignment
-	
-	func updateAlignment(to newAlignment: ARPlaneAnchor.Alignment, transform: float4x4, allowAnimation: Bool) {
-		if isChangingAlignment {
-			return
-		}
-		
-		// Only animate if the alignment has changed.
-		let animationDuration = (newAlignment != currentAlignment && allowAnimation) ? 0.5 : 0
-		
-		var newObjectRotation: Float?
-		if newAlignment == .horizontal && currentAlignment == .vertical {
-			// When changing to horizontal placement, restore the previous horizontal rotation.
-			newObjectRotation = rotationWhenAlignedHorizontally
-		} else if newAlignment == .vertical && currentAlignment == .horizontal {
-			// When changing to vertical placement, reset the object's rotation (y-up).
-			newObjectRotation = 0.0001
-		}
-		
-		currentAlignment = newAlignment
-		
-		SCNTransaction.begin()
-		SCNTransaction.animationDuration = animationDuration
-		SCNTransaction.completionBlock = {
-			self.isChangingAlignment = false
-		}
-		
-		isChangingAlignment = true
-		
-		// Use the filtered position rather than the exact one from the transform.
-		simdTransform = transform
-		simdTransform.translation = simdWorldPosition
-		
-		if newObjectRotation != nil {
-			objectRotation = newObjectRotation!
-		}
-		
-		SCNTransaction.commit()
-	}
+    
+    // MARK: - Setting the object's alignment
+    
+    func updateAlignment(to newAlignment: ARPlaneAnchor.Alignment, transform: float4x4, allowAnimation: Bool) {
+        if isChangingAlignment {
+            return
+        }
+        
+        // Only animate if the alignment has changed.
+        let animationDuration = (newAlignment != currentAlignment && allowAnimation) ? 0.5 : 0
+        
+        var newObjectRotation: Float?
+        if newAlignment == .horizontal && currentAlignment == .vertical {
+            // When changing to horizontal placement, restore the previous horizontal rotation.
+            newObjectRotation = rotationWhenAlignedHorizontally
+        } else if newAlignment == .vertical && currentAlignment == .horizontal {
+            // When changing to vertical placement, reset the object's rotation (y-up).
+            newObjectRotation = 0.0001
+        }
+        
+        currentAlignment = newAlignment
+        
+        SCNTransaction.begin()
+        SCNTransaction.animationDuration = animationDuration
+        SCNTransaction.completionBlock = {
+            self.isChangingAlignment = false
+        }
+        
+        isChangingAlignment = true
+        
+        // Use the filtered position rather than the exact one from the transform.
+        simdTransform = transform
+        simdTransform.translation = simdWorldPosition
+        
+        if newObjectRotation != nil {
+            objectRotation = newObjectRotation!
+        }
+        
+        SCNTransaction.commit()
+    }
     
     /// - Tag: AdjustOntoPlaneAnchor
     func adjustOntoPlaneAnchor(_ anchor: ARPlaneAnchor, using node: SCNNode) {
-		// Test if the alignment of the plane is compatible with the object's allowed placement
-		if !allowedAlignments.contains(anchor.alignment) {
-			return
-		}
-		
-		// Get the object's position in the plane's coordinate system.
+        // Test if the alignment of the plane is compatible with the object's allowed placement
+        if !allowedAlignments.contains(anchor.alignment) {
+            return
+        }
+        
+        // Get the object's position in the plane's coordinate system.
         let planePosition = node.convertPosition(position, from: parent)
         
         // Check that the object is not already on the plane.
         guard planePosition.y != 0 else { return }
-		
+        
         // Add 10% tolerance to the corners of the plane.
         let tolerance: Float = 0.1
         
@@ -193,7 +193,7 @@ class VirtualObject: SCNReferenceNode {
             SCNTransaction.animationDuration = CFTimeInterval(distanceToPlane * 500) // Move 2 mm per second.
             SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
             position.y = anchor.transform.columns.3.y
-			updateAlignment(to: anchor.alignment, transform: simdWorldTransform, allowAnimation: false)
+            updateAlignment(to: anchor.alignment, transform: simdWorldTransform, allowAnimation: false)
             SCNTransaction.commit()
         }
     }
@@ -211,7 +211,7 @@ extension VirtualObject {
         return fileEnumerator.compactMap { element in
             let url = element as! URL
 
-            guard url.pathExtension == "scn" else { return nil }
+            guard url.pathExtension == "scn" && !url.path.contains("lighting") else { return nil }
 
             return VirtualObject(url: url)
         }

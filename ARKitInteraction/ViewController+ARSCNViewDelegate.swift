@@ -12,24 +12,27 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
     // MARK: - ARSCNViewDelegate
     
     func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+        
+        let isAnyObjectInView = virtualObjectLoader.loadedObjects.contains { object in
+            return sceneView.isNode(object, insideFrustumOf: sceneView.pointOfView!)
+        }
+        
         DispatchQueue.main.async {
             self.virtualObjectInteraction.updateObjectToCurrentTrackingPosition()
-            self.updateFocusSquare()
+            self.updateFocusSquare(isObjectVisible: isAnyObjectInView)
         }
-		
-		// If the object selection menu is open, update availability of items
-		if objectsViewController != nil {
-			let planeAnchor = focusSquare.currentPlaneAnchor
-			objectsViewController?.updateObjectAvailability(for: planeAnchor)
-		}
-		
-        // If light estimation is enabled, update the intensity of the model's lights and the environment map
-        let baseIntensity: CGFloat = 40
-        let lightingEnvironment = sceneView.scene.lightingEnvironment
+        
+        // If the object selection menu is open, update availability of items
+        if objectsViewController != nil {
+            let planeAnchor = focusSquare.currentPlaneAnchor
+            objectsViewController?.updateObjectAvailability(for: planeAnchor)
+        }
+        
+        // If light estimation is enabled, update the intensity of the directional lights
         if let lightEstimate = session.currentFrame?.lightEstimate {
-            lightingEnvironment.intensity = lightEstimate.ambientIntensity / baseIntensity
+            sceneView.updateDirectionalLighting(intensity: lightEstimate.ambientIntensity, queue: updateQueue)
         } else {
-            lightingEnvironment.intensity = baseIntensity
+            sceneView.updateDirectionalLighting(intensity: 1000, queue: updateQueue)
         }
     }
     
@@ -72,9 +75,9 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
             statusViewController.escalateFeedback(for: camera.trackingState, inSeconds: 3.0)
         case .normal:
             statusViewController.cancelScheduledMessage(for: .trackingStateEscalation)
-			
-			// Unhide content after successful relocalization.
-			virtualObjectLoader.loadedObjects.forEach { $0.isHidden = false }
+            
+            // Unhide content after successful relocalization.
+            virtualObjectLoader.loadedObjects.forEach { $0.isHidden = false }
         }
     }
     
@@ -97,17 +100,17 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
     }
     
     func sessionWasInterrupted(_ session: ARSession) {
-		// Hide content before going into the background.
-		virtualObjectLoader.loadedObjects.forEach { $0.isHidden = true }
+        // Hide content before going into the background.
+        virtualObjectLoader.loadedObjects.forEach { $0.isHidden = true }
     }
-	
-	func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool {
+    
+    func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool {
         /*
          Allow the session to attempt to resume after an interruption.
          This process may not succeed, so the app must be prepared
          to reset the session if the relocalizing status continues
          for a long time -- see `escalateFeedback` in `StatusViewController`.
          */
-		return true
-	}
+        return true
+    }
 }

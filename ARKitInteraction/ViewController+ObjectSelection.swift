@@ -18,30 +18,30 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
      */
     func placeVirtualObject(_ virtualObject: VirtualObject) {
         guard let cameraTransform = session.currentFrame?.camera.transform,
-			let focusSquareAlignment = focusSquare.recentFocusSquareAlignments.last,
-			focusSquare.state != .initializing else {
-            	statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
-				if let controller = objectsViewController {
-					virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
-				}
+            let focusSquareAlignment = focusSquare.recentFocusSquareAlignments.last,
+            focusSquare.state != .initializing else {
+                statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
+                if let controller = objectsViewController {
+                    virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
+                }
             return
         }
-		
-		// The focus square transform may contain a scale component, so reset scale to 1
-		let focusSquareScaleInverse = 1.0 / focusSquare.simdScale.x
+        
+        // The focus square transform may contain a scale component, so reset scale to 1
+        let focusSquareScaleInverse = 1.0 / focusSquare.simdScale.x
         let scaleMatrix = float4x4(uniformScale: focusSquareScaleInverse)
-		let focusSquareTransformWithoutScale = focusSquare.simdWorldTransform * scaleMatrix
-		
+        let focusSquareTransformWithoutScale = focusSquare.simdWorldTransform * scaleMatrix
+        
         virtualObjectInteraction.selectedObject = virtualObject
-		virtualObject.setTransform(focusSquareTransformWithoutScale,
-								   relativeTo: cameraTransform,
-								   smoothMovement: false,
-								   alignment: focusSquareAlignment,
-								   allowAnimation: false)
+        virtualObject.setTransform(focusSquareTransformWithoutScale,
+                                   relativeTo: cameraTransform,
+                                   smoothMovement: false,
+                                   alignment: focusSquareAlignment,
+                                   allowAnimation: false)
         
         updateQueue.async {
             self.sceneView.scene.rootNode.addChildNode(virtualObject)
-			self.sceneView.addOrUpdateAnchor(for: virtualObject)
+            self.sceneView.addOrUpdateAnchor(for: virtualObject)
         }
     }
     
@@ -49,10 +49,12 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
     
     func virtualObjectSelectionViewController(_: VirtualObjectSelectionViewController, didSelectObject object: VirtualObject) {
         virtualObjectLoader.loadVirtualObject(object, loadedHandler: { [unowned self] loadedObject in
-            DispatchQueue.main.async {
-                self.hideObjectLoadingUI()
-                self.placeVirtualObject(loadedObject)
-            }
+            self.sceneView.prepare([object], completionHandler: { _ in
+                DispatchQueue.main.async {
+                    self.hideObjectLoadingUI()
+                    self.placeVirtualObject(loadedObject)
+                }
+            })
         })
 
         displayObjectLoadingUI()
@@ -63,10 +65,10 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
             fatalError("Programmer error: Failed to lookup virtual object in scene.")
         }
         virtualObjectLoader.removeVirtualObject(at: objectIndex)
-		virtualObjectInteraction.selectedObject = nil
-		if let anchor = object.anchor {
-			session.remove(anchor: anchor)
-		}
+        virtualObjectInteraction.selectedObject = nil
+        if let anchor = object.anchor {
+            session.remove(anchor: anchor)
+        }
     }
 
     // MARK: Object Loading UI

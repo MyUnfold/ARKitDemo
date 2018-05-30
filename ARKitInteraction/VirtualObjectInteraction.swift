@@ -77,12 +77,12 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
         case .changed:
             // Ignore changes to the pan gesture until the threshold for displacment has been exceeded.
             break
-			
-		case .ended:
-			// Update the object's anchor when the gesture ended.
+            
+        case .ended:
+            // Update the object's anchor when the gesture ended.
             guard let existingTrackedObject = trackedObject else { break }
             sceneView.addOrUpdateAnchor(for: existingTrackedObject)
-			fallthrough
+            fallthrough
             
         default:
             // Clear the current position tracking.
@@ -132,7 +132,7 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
         } else if let object = selectedObject {
             // Teleport the object to whereever the user touched the screen.
             translate(object, basedOn: touchLocation, infinitePlane: false, allowAnimation: false)
-			sceneView.addOrUpdateAnchor(for: object)
+            sceneView.addOrUpdateAnchor(for: object)
         }
     }
     
@@ -160,13 +160,13 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
     // MARK: - Update object position
 
     /// - Tag: DragVirtualObject
-	private func translate(_ object: VirtualObject, basedOn screenPos: CGPoint, infinitePlane: Bool, allowAnimation: Bool) {
+    private func translate(_ object: VirtualObject, basedOn screenPos: CGPoint, infinitePlane: Bool, allowAnimation: Bool) {
         guard let cameraTransform = sceneView.session.currentFrame?.camera.transform,
-			let result = sceneView.smartHitTest(screenPos,
-												infinitePlane: infinitePlane,
-												objectPosition: object.simdWorldPosition,
-												allowedAlignments: object.allowedAlignments) else { return }
-		
+            let result = sceneView.smartHitTest(screenPos,
+                                                infinitePlane: infinitePlane,
+                                                objectPosition: object.simdWorldPosition,
+                                                allowedAlignments: object.allowedAlignments) else { return }
+        
         let planeAlignment: ARPlaneAnchor.Alignment
         if let planeAnchor = result.anchor as? ARPlaneAnchor {
             planeAlignment = planeAnchor.alignment
@@ -184,11 +184,11 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
          */
         let transform = result.worldTransform
         let isOnPlane = result.anchor is ARPlaneAnchor
-		object.setTransform(transform,
-							relativeTo: cameraTransform,
-							smoothMovement: !isOnPlane,
-							alignment: planeAlignment,
-							allowAnimation: allowAnimation)
+        object.setTransform(transform,
+                            relativeTo: cameraTransform,
+                            smoothMovement: !isOnPlane,
+                            alignment: planeAlignment,
+                            allowAnimation: allowAnimation)
     }
 }
 

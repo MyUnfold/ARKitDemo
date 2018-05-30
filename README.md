@@ -29,32 +29,32 @@ The square changes size and orientation to reflect estimated scene depth, and sw
 When the user chooses a virtual object to place, the sample app's [`setPosition(_:relativeTo:smoothMovement)`](x-source-tag://VirtualObjectSetPosition) method uses the [`FocusSquare`](x-source-tag://FocusSquare) object's simple heuristics to place the object at a roughly realistic position in the middle of the screen, even if ARKit hasn't yet detected a plane at that location.
 
 ``` swift
-      guard let cameraTransform = session.currentFrame?.camera.transform,
-	let focusSquareAlignment = focusSquare.recentFocusSquareAlignments.last,
-	focusSquare.state != .initializing else {
-          	statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
-		if let controller = objectsViewController {
-			virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
-		}
-          return
-      }
+guard let cameraTransform = session.currentFrame?.camera.transform,
+    let focusSquareAlignment = focusSquare.recentFocusSquareAlignments.last,
+    focusSquare.state != .initializing else {
+        statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
+        if let controller = objectsViewController {
+            virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
+        }
+    return
+}
 
 // The focus square transform may contain a scale component, so reset scale to 1
 let focusSquareScaleInverse = 1.0 / focusSquare.simdScale.x
-      let scaleMatrix = float4x4(uniformScale: focusSquareScaleInverse)
+let scaleMatrix = float4x4(uniformScale: focusSquareScaleInverse)
 let focusSquareTransformWithoutScale = focusSquare.simdWorldTransform * scaleMatrix
 
-      virtualObjectInteraction.selectedObject = virtualObject
+virtualObjectInteraction.selectedObject = virtualObject
 virtualObject.setTransform(focusSquareTransformWithoutScale,
-						   relativeTo: cameraTransform,
-						   smoothMovement: false,
-						   alignment: focusSquareAlignment,
-						   allowAnimation: false)
-      
-      updateQueue.async {
-          self.sceneView.scene.rootNode.addChildNode(virtualObject)
-	self.sceneView.addOrUpdateAnchor(for: virtualObject)
-      }
+                           relativeTo: cameraTransform,
+                           smoothMovement: false,
+                           alignment: focusSquareAlignment,
+                           allowAnimation: false)
+
+updateQueue.async {
+    self.sceneView.scene.rootNode.addChildNode(virtualObject)
+    self.sceneView.addOrUpdateAnchor(for: virtualObject)
+}
 ```
 [View in Source](x-source-tag://PlaceVirtualObject)
 
@@ -63,18 +63,18 @@ This position might not be an accurate estimate of the real-world surface the us
 Over time, ARKit detects planes and refines its estimates of their position, calling the [`renderer(_:didAdd:for:)`][4] and [`renderer(_:didUpdate:for:)`][5] delegate methods to report results. In those methods, the sample app calls its [`adjustOntoPlaneAnchor(_:using:)`](x-source-tag://AdjustOntoPlaneAnchor) method to determine whether a previously placed virtual object is close to a detected plane. If so, that method uses a subtle animation to move the virtual object onto the plane, so that the object appears to be at the user's chosen position while benefiting from ARKit's refined estimate of the real-world surface at that position:
 
 ``` swift
-     // Move onto the plane if it is near it (within 5 centimeters).
-     let verticalAllowance: Float = 0.05
-     let epsilon: Float = 0.001 // Do not update if the difference is less than 1 mm.
-     let distanceToPlane = abs(planePosition.y)
-     if distanceToPlane > epsilon && distanceToPlane < verticalAllowance {
-         SCNTransaction.begin()
-         SCNTransaction.animationDuration = CFTimeInterval(distanceToPlane * 500) // Move 2 mm per second.
-         SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
-         position.y = anchor.transform.columns.3.y
-updateAlignment(to: anchor.alignment, transform: simdWorldTransform, allowAnimation: false)
-         SCNTransaction.commit()
-     }
+// Move onto the plane if it is near it (within 5 centimeters).
+let verticalAllowance: Float = 0.05
+let epsilon: Float = 0.001 // Do not update if the difference is less than 1 mm.
+let distanceToPlane = abs(planePosition.y)
+if distanceToPlane > epsilon && distanceToPlane < verticalAllowance {
+    SCNTransaction.begin()
+    SCNTransaction.animationDuration = CFTimeInterval(distanceToPlane * 500) // Move 2 mm per second.
+    SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
+    position.y = anchor.transform.columns.3.y
+    updateAlignment(to: anchor.alignment, transform: simdWorldTransform, allowAnimation: false)
+    SCNTransaction.commit()
+}
 ```
 [View in Source](x-source-tag://AdjustOntoPlaneAnchor)
 

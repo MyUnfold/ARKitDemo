@@ -27,11 +27,11 @@ class ViewController: UIViewController {
     
     /// The view controller that displays the status and "restart experience" UI.
     lazy var statusViewController: StatusViewController = {
-        return childViewControllers.lazy.flatMap({ $0 as? StatusViewController }).first!
+        return childViewControllers.lazy.compactMap({ $0 as? StatusViewController }).first!
     }()
-	
-	/// The view controller that displays the virtual object selection menu.
-	var objectsViewController: VirtualObjectSelectionViewController?
+    
+    /// The view controller that displays the virtual object selection menu.
+    var objectsViewController: VirtualObjectSelectionViewController?
     
     // MARK: - ARKit Configuration Properties
     
@@ -68,17 +68,8 @@ class ViewController: UIViewController {
         // Set up scene content.
         setupCamera()
         sceneView.scene.rootNode.addChildNode(focusSquare)
-
-        /*
-         The `sceneView.automaticallyUpdatesLighting` option creates an
-         ambient light source and modulates its intensity. This sample app
-         instead modulates a global lighting environment map for use with
-         physically based materials, so disable automatic lighting.
-         */
-        sceneView.automaticallyUpdatesLighting = false
-        if let environmentMap = UIImage(named: "Models.scnassets/sharedImages/environment_blur.exr") {
-            sceneView.scene.lightingEnvironment.contents = environmentMap
-        }
+        
+        sceneView.setupDirectionalLighting(queue: updateQueue)
 
         // Hook up status view controller callback(s).
         statusViewController.restartExperienceHandler = { [unowned self] in
@@ -91,21 +82,21 @@ class ViewController: UIViewController {
         sceneView.addGestureRecognizer(tapGesture)
     }
 
-	override func viewDidAppear(_ animated: Bool) {
-		super.viewDidAppear(animated)
-		
-		// Prevent the screen from being dimmed to avoid interuppting the AR experience.
-		UIApplication.shared.isIdleTimerDisabled = true
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        // Prevent the screen from being dimmed to avoid interuppting the AR experience.
+        UIApplication.shared.isIdleTimerDisabled = true
 
         // Start the `ARSession`.
         resetTracking()
-	}
-	
-	override func viewWillDisappear(_ animated: Bool) {
-		super.viewWillDisappear(animated)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
 
         session.pause()
-	}
+    }
 
     // MARK: - Scene content setup
 
@@ -127,30 +118,29 @@ class ViewController: UIViewController {
     // MARK: - Session management
     
     /// Creates a new AR configuration to run on the `session`.
-	func resetTracking() {
-		virtualObjectInteraction.selectedObject = nil
-		
+    func resetTracking() {
+        virtualObjectInteraction.selectedObject = nil
+        
         let configuration = ARWorldTrackingConfiguration()
         configuration.planeDetection = [.horizontal, .vertical]
-		session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+        if #available(iOS 12.0, *) {
+            configuration.environmentTexturing = .automatic
+        }
+        session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
 
         statusViewController.scheduleMessage("FIND A SURFACE TO PLACE AN OBJECT", inSeconds: 7.5, messageType: .planeEstimation)
-	}
+    }
 
     // MARK: - Focus Square
 
-	func updateFocusSquare() {
-        let isObjectVisible = virtualObjectLoader.loadedObjects.contains { object in
-            return sceneView.isNode(object, insideFrustumOf: sceneView.pointOfView!)
-        }
-        
+    func updateFocusSquare(isObjectVisible: Bool) {
         if isObjectVisible {
             focusSquare.hide()
         } else {
             focusSquare.unhide()
             statusViewController.scheduleMessage("TRY MOVING LEFT OR RIGHT", inSeconds: 5.0, messageType: .focusSquare)
         }
-		
+        
         // Perform hit testing only when ARKit tracking is in a good state.
         if let camera = session.currentFrame?.camera, case .normal = camera.trackingState,
             let result = self.sceneView.smartHitTest(screenCenter) {
@@ -167,9 +157,9 @@ class ViewController: UIViewController {
             }
             addObjectButton.isHidden = true
         }
-	}
+    }
     
-	// MARK: - Error handling
+    // MARK: - Error handling
     
     func displayErrorMessage(title: String, message: String) {
         // Blur the background.
