@@ -130,12 +130,19 @@ class VirtualObject: SCNReferenceNode {
         let animationDuration = (newAlignment != currentAlignment && allowAnimation) ? 0.5 : 0
         
         var newObjectRotation: Float?
-        if newAlignment == .horizontal && currentAlignment == .vertical {
+        switch (newAlignment, currentAlignment) {
+        case (.horizontal, .horizontal):
+            // When placement remains horizontal, alignment doesn't need to be changed
+            // (unlike for vertical, where the surface's world-y-rotation might be different).
+            return
+        case (.horizontal, .vertical):
             // When changing to horizontal placement, restore the previous horizontal rotation.
             newObjectRotation = rotationWhenAlignedHorizontally
-        } else if newAlignment == .vertical && currentAlignment == .horizontal {
+        case (.vertical, .horizontal):
             // When changing to vertical placement, reset the object's rotation (y-up).
             newObjectRotation = 0.0001
+        default:
+            break
         }
         
         currentAlignment = newAlignment
@@ -149,8 +156,9 @@ class VirtualObject: SCNReferenceNode {
         isChangingAlignment = true
         
         // Use the filtered position rather than the exact one from the transform.
-        simdTransform = transform
-        simdTransform.translation = simdWorldPosition
+        var mutableTransform = transform
+        mutableTransform.translation = simdWorldPosition
+        simdTransform = mutableTransform
         
         if newObjectRotation != nil {
             objectRotation = newObjectRotation!

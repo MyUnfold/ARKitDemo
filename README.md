@@ -29,27 +29,16 @@ The square changes size and orientation to reflect estimated scene depth, and sw
 When the user chooses a virtual object to place, the sample app's [`setPosition(_:relativeTo:smoothMovement)`](x-source-tag://VirtualObjectSetPosition) method uses the [`FocusSquare`](x-source-tag://FocusSquare) object's simple heuristics to place the object at a roughly realistic position in the middle of the screen, even if ARKit hasn't yet detected a plane at that location.
 
 ``` swift
-guard let cameraTransform = session.currentFrame?.camera.transform,
-    let focusSquareAlignment = focusSquare.recentFocusSquareAlignments.last,
-    focusSquare.state != .initializing else {
-        statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
-        if let controller = objectsViewController {
-            virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
-        }
+guard focusSquare.state != .initializing else {
+    statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
+    if let controller = objectsViewController {
+        virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
+    }
     return
 }
 
-// The focus square transform may contain a scale component, so reset scale to 1
-let focusSquareScaleInverse = 1.0 / focusSquare.simdScale.x
-let scaleMatrix = float4x4(uniformScale: focusSquareScaleInverse)
-let focusSquareTransformWithoutScale = focusSquare.simdWorldTransform * scaleMatrix
-
+virtualObjectInteraction.translate(virtualObject, basedOn: screenCenter, infinitePlane: false, allowAnimation: false)
 virtualObjectInteraction.selectedObject = virtualObject
-virtualObject.setTransform(focusSquareTransformWithoutScale,
-                           relativeTo: cameraTransform,
-                           smoothMovement: false,
-                           alignment: focusSquareAlignment,
-                           allowAnimation: false)
 
 updateQueue.async {
     self.sceneView.scene.rootNode.addChildNode(virtualObject)

@@ -10,34 +10,22 @@ import ARKit
 
 extension ViewController: VirtualObjectSelectionViewControllerDelegate {
     /**
-     Adds the specified virtual object to the scene, placed using
-     the focus square's estimate of the world-space position
-     currently corresponding to the center of the screen.
+     Adds the specified virtual object to the scene, placed at the world-space position
+     estimated by a hit test from the center of the screen.
      
      - Tag: PlaceVirtualObject
      */
     func placeVirtualObject(_ virtualObject: VirtualObject) {
-        guard let cameraTransform = session.currentFrame?.camera.transform,
-            let focusSquareAlignment = focusSquare.recentFocusSquareAlignments.last,
-            focusSquare.state != .initializing else {
-                statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
-                if let controller = objectsViewController {
-                    virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
-                }
+        guard focusSquare.state != .initializing else {
+            statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
+            if let controller = objectsViewController {
+                virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
+            }
             return
         }
         
-        // The focus square transform may contain a scale component, so reset scale to 1
-        let focusSquareScaleInverse = 1.0 / focusSquare.simdScale.x
-        let scaleMatrix = float4x4(uniformScale: focusSquareScaleInverse)
-        let focusSquareTransformWithoutScale = focusSquare.simdWorldTransform * scaleMatrix
-        
+        virtualObjectInteraction.translate(virtualObject, basedOn: screenCenter, infinitePlane: false, allowAnimation: false)
         virtualObjectInteraction.selectedObject = virtualObject
-        virtualObject.setTransform(focusSquareTransformWithoutScale,
-                                   relativeTo: cameraTransform,
-                                   smoothMovement: false,
-                                   alignment: focusSquareAlignment,
-                                   allowAnimation: false)
         
         updateQueue.async {
             self.sceneView.scene.rootNode.addChildNode(virtualObject)
@@ -53,6 +41,7 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
                 DispatchQueue.main.async {
                     self.hideObjectLoadingUI()
                     self.placeVirtualObject(loadedObject)
+                    loadedObject.isHidden = false
                 }
             })
         })
