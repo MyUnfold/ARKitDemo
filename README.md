@@ -12,9 +12,7 @@ This sample app provides a simple AR experience allowing a user to place one or 
 
 The sections below correspond to sections in [iOS Human Interface Guidelines > Augmented Reality][0], and provide details on how this sample app implements those guidelines. For more detailed reasoning on each section, see the corresponding content in the iOS Human Interface Guidelines.
 
-## Getting Started
-
-ARKit and this sample app require iOS 11 and a device with an A9 (or later) processor. ARKit is not available in iOS Simulator.
+- Note: ARKit requires a device with an A9 or later processor. ARKit is not available in iOS Simulator.
 
 ## Placing Virtual Objects
 

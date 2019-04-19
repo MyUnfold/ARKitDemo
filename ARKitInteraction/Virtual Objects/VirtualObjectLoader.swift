@@ -27,11 +27,10 @@ class VirtualObjectLoader {
         isLoading = true
         loadedObjects.append(object)
         
-        // Load the content asynchronously.
-        DispatchQueue.global(qos: .background).async {
+        // Load the content into the reference node.
+        DispatchQueue.global(qos: .userInitiated).async {
             object.reset()
             object.load()
-
             self.isLoading = false
             loadedHandler(object)
         }
@@ -50,6 +49,7 @@ class VirtualObjectLoader {
         guard loadedObjects.indices.contains(index) else { return }
         
         loadedObjects[index].removeFromParentNode()
+        loadedObjects[index].unload()
         loadedObjects.remove(at: index)
     }
 }
