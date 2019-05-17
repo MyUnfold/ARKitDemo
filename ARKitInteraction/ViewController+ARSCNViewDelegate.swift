@@ -18,7 +18,6 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
         }
         
         DispatchQueue.main.async {
-            self.virtualObjectInteraction.updateObjectToCurrentTrackingPosition()
             self.updateFocusSquare(isObjectVisible: isAnyObjectInView)
         }
         
@@ -37,7 +36,7 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
-        guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
+        guard anchor is ARPlaneAnchor else { return }
         DispatchQueue.main.async {
             self.statusViewController.cancelScheduledMessage(for: .planeEstimation)
             self.statusViewController.showMessage("SURFACE DETECTED")
@@ -45,42 +44,33 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
                 self.statusViewController.scheduleMessage("TAP + TO PLACE AN OBJECT", inSeconds: 7.5, messageType: .contentPlacement)
             }
         }
-        updateQueue.async {
-            for object in self.virtualObjectLoader.loadedObjects {
-                object.adjustOntoPlaneAnchor(planeAnchor, using: node)
-            }
-        }
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         updateQueue.async {
-            if let planeAnchor = anchor as? ARPlaneAnchor {
-                for object in self.virtualObjectLoader.loadedObjects {
-                    object.adjustOntoPlaneAnchor(planeAnchor, using: node)
-                }
-            } else {
-                if let objectAtAnchor = self.virtualObjectLoader.loadedObjects.first(where: { $0.anchor == anchor }) {
-                    objectAtAnchor.simdPosition = anchor.transform.translation
-                    objectAtAnchor.anchor = anchor
-                }
+            if let objectAtAnchor = self.virtualObjectLoader.loadedObjects.first(where: { $0.anchor == anchor }) {
+                objectAtAnchor.simdPosition = anchor.transform.translation
+                objectAtAnchor.anchor = anchor
             }
         }
     }
     
+    /// - Tag: ShowVirtualContent
     func session(_ session: ARSession, cameraDidChangeTrackingState camera: ARCamera) {
         statusViewController.showTrackingQualityInfo(for: camera.trackingState, autoHide: true)
-        
         switch camera.trackingState {
         case .notAvailable, .limited:
             statusViewController.escalateFeedback(for: camera.trackingState, inSeconds: 3.0)
         case .normal:
             statusViewController.cancelScheduledMessage(for: .trackingStateEscalation)
-            
-            // Unhide content after successful relocalization.
-            virtualObjectLoader.loadedObjects.forEach { $0.isHidden = false }
+            showVirtualContent()
         }
     }
-    
+
+    func showVirtualContent() {
+        virtualObjectLoader.loadedObjects.forEach { $0.isHidden = false }
+    }
+
     func session(_ session: ARSession, didFailWithError error: Error) {
         guard error is ARError else { return }
         
@@ -100,16 +90,22 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
     
     func sessionWasInterrupted(_ session: ARSession) {
         // Hide content before going into the background.
-        virtualObjectLoader.loadedObjects.forEach { $0.isHidden = true }
+        hideVirtualContent()
     }
     
+    /// - Tag: HideVirtualContent
+    func hideVirtualContent() {
+        virtualObjectLoader.loadedObjects.forEach { $0.isHidden = true }
+    }
+
+    /*
+     Allow the session to attempt to resume after an interruption.
+     This process may not succeed, so the app must be prepared
+     to reset the session if the relocalizing status continues
+     for a long time -- see `escalateFeedback` in `StatusViewController`.
+     */
+    /// - Tag: Relocalization
     func sessionShouldAttemptRelocalization(_ session: ARSession) -> Bool {
-        /*
-         Allow the session to attempt to resume after an interruption.
-         This process may not succeed, so the app must be prepared
-         to reset the session if the relocalizing status continues
-         for a long time -- see `escalateFeedback` in `StatusViewController`.
-         */
         return true
     }
 }

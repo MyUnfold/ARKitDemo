@@ -29,7 +29,6 @@ class VirtualObjectLoader {
         
         // Load the content into the reference node.
         DispatchQueue.global(qos: .userInitiated).async {
-            object.reset()
             object.load()
             self.isLoading = false
             loadedHandler(object)
@@ -44,11 +43,14 @@ class VirtualObjectLoader {
             removeVirtualObject(at: index)
         }
     }
-    
+
+    /// - Tag: RemoveVirtualObject
     func removeVirtualObject(at index: Int) {
         guard loadedObjects.indices.contains(index) else { return }
         
         loadedObjects[index].removeFromParentNode()
+        loadedObjects[index].raycast?.stopTracking()
+        loadedObjects[index].raycast = nil
         loadedObjects[index].unload()
         loadedObjects.remove(at: index)
     }

@@ -50,6 +50,7 @@ extension ViewController: UIGestureRecognizerDelegate {
         // Disable restart for a while in order to give the session time to restart.
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
             self.isRestartAvailable = true
+            self.upperControlsView.isHidden = false
         }
     }
 }

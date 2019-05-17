@@ -2,7 +2,12 @@
 See LICENSE folder for this sample’s licensing information.
 
 Abstract:
-Coordinates movement and gesture interactions with virtual objects.
+Manages user interaction with virtual objects to enable one-finger tap, one- and two-finger pan,
+ and two-finger rotation gesture recognizers to let the user position and orient virtual objects.
+ 
+ Note: this sample app doesn't allow object scaling because quite often, scaling doesn't make sense
+ for certain virtual items. For example, a virtual television can be scaled within some small believable
+ range, but a virtual guitar should always remain the same size.
 */
 
 import UIKit
@@ -24,32 +29,35 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
     var selectedObject: VirtualObject?
     
     /// The object that is tracked for use by the pan and rotation gestures.
-    private var trackedObject: VirtualObject? {
+    var trackedObject: VirtualObject? {
         didSet {
             guard trackedObject != nil else { return }
             selectedObject = trackedObject
         }
     }
     
-    /// The tracked screen position used to update the `trackedObject`'s position in `updateObjectToCurrentTrackingPosition()`.
+    /// The tracked screen position used to update the `trackedObject`'s position.
     private var currentTrackingPosition: CGPoint?
-
+    
     init(sceneView: VirtualObjectARView) {
         self.sceneView = sceneView
         super.init()
         
-        let panGesture = ThresholdPanGesture(target: self, action: #selector(didPan(_:)))
-        panGesture.delegate = self
+        createPanGestureRecognizer(sceneView)
         
         let rotationGesture = UIRotationGestureRecognizer(target: self, action: #selector(didRotate(_:)))
         rotationGesture.delegate = self
-        
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTap(_:)))
-        
-        // Add gestures to the `sceneView`.
-        sceneView.addGestureRecognizer(panGesture)
         sceneView.addGestureRecognizer(rotationGesture)
+
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTap(_:)))
         sceneView.addGestureRecognizer(tapGesture)
+    }
+    
+    // - Tag: CreatePanGesture
+    func createPanGestureRecognizer(_ sceneView: VirtualObjectARView) {
+        let panGesture = ThresholdPanGesture(target: self, action: #selector(didPan(_:)))
+        panGesture.delegate = self
+        sceneView.addGestureRecognizer(panGesture)
     }
     
     // MARK: - Gesture Actions
@@ -69,8 +77,8 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
             
             let currentPosition = currentTrackingPosition ?? CGPoint(sceneView.projectPoint(object.position))
             
-            // The `currentTrackingPosition` is used to update the `selectedObject` in `updateObjectToCurrentTrackingPosition()`.
             currentTrackingPosition = CGPoint(x: currentPosition.x + translation.x, y: currentPosition.y + translation.y)
+            translate(object, basedOn: currentTrackingPosition!)
 
             gesture.setTranslation(.zero, in: sceneView)
             
@@ -81,7 +89,7 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
         case .ended:
             // Update the object's anchor when the gesture ended.
             guard let existingTrackedObject = trackedObject else { break }
-            sceneView.addOrUpdateAnchor(for: existingTrackedObject)
+            existingTrackedObject.shouldUpdateAnchor = true
             fallthrough
             
         default:
@@ -92,31 +100,14 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
     }
 
     /**
-     If a drag gesture is in progress, update the tracked object's position by
-     converting the 2D touch location on screen (`currentTrackingPosition`) to
-     3D world space.
-     This method is called per frame (via `SCNSceneRendererDelegate` callbacks),
-     allowing drag gestures to move virtual objects regardless of whether one
-     drags a finger across the screen or moves the device through space.
-     - Tag: updateObjectToCurrentTrackingPosition
-     */
-    @objc
-    func updateObjectToCurrentTrackingPosition() {
-        guard let object = trackedObject, let position = currentTrackingPosition else { return }
-        translate(object, basedOn: position, infinitePlane: translateAssumingInfinitePlane, allowAnimation: true)
-    }
-
-    /// - Tag: didRotate
+     For looking down on the object (99% of all use cases), you subtract the angle.
+     To make rotation also work correctly when looking from below the object one would have to
+     flip the sign of the angle depending on whether the object is above or below the camera.
+     - Tag: didRotate */
     @objc
     func didRotate(_ gesture: UIRotationGestureRecognizer) {
         guard gesture.state == .changed else { return }
         
-        /*
-         - Note:
-          For looking down on the object (99% of all use cases), we need to subtract the angle.
-          To make rotation also work correctly when looking from below the object one would have to
-          flip the sign of the angle depending on whether the object is above or below the camera...
-         */
         trackedObject?.objectRotation -= Float(gesture.rotation)
         
         gesture.rotation = 0
@@ -131,8 +122,8 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
             selectedObject = tappedObject
         } else if let object = selectedObject {
             // Teleport the object to whereever the user touched the screen.
-            translate(object, basedOn: touchLocation, infinitePlane: false, allowAnimation: false)
-            sceneView.addOrUpdateAnchor(for: object)
+            translate(object, basedOn: touchLocation)
+            object.shouldUpdateAnchor = true
         }
     }
     
@@ -141,8 +132,13 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
         return true
     }
 
-    /// A helper method to return the first object that is found under the provided `gesture`s touch locations.
-    /// - Tag: TouchTesting
+    /** A helper method to return the first object that is found under the provided `gesture`s touch locations.
+     Performs hit tests using the touch locations provided by gesture recognizers. By hit testing against the bounding
+     boxes of the virtual objects, this function makes it more likely that a user touch will affect the object even if the
+     touch location isn't on a point where the object has visible content. By performing multiple hit tests for multitouch
+     gestures, the method makes it more likely that the user touch affects the intended object.
+      - Tag: TouchTesting
+    */
     private func objectInteracting(with gesture: UIGestureRecognizer, in view: ARSCNView) -> VirtualObject? {
         for index in 0..<gesture.numberOfTouches {
             let touchLocation = gesture.location(ofTouch: index, in: view)
@@ -158,37 +154,11 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
     }
     
     // MARK: - Update object position
-
     /// - Tag: DragVirtualObject
-    func translate(_ object: VirtualObject, basedOn screenPos: CGPoint, infinitePlane: Bool, allowAnimation: Bool) {
-        guard let cameraTransform = sceneView.session.currentFrame?.camera.transform,
-            let result = sceneView.smartHitTest(screenPos,
-                                                infinitePlane: infinitePlane,
-                                                objectPosition: object.simdWorldPosition,
-                                                allowedAlignments: object.allowedAlignments) else { return }
-        
-        let planeAlignment: ARPlaneAnchor.Alignment
-        if let planeAnchor = result.anchor as? ARPlaneAnchor {
-            planeAlignment = planeAnchor.alignment
-        } else if result.type == .estimatedHorizontalPlane {
-            planeAlignment = .horizontal
-        } else if result.type == .estimatedVerticalPlane {
-            planeAlignment = .vertical
-        } else {
-            return
+    func translate(_ object: VirtualObject, basedOn screenPos: CGPoint) {
+        if let query = sceneView.raycastQuery(from: screenPos, allowing: .estimatedPlane, alignment: object.allowedAlignment) {
+            object.raycast?.update(query)
         }
-
-        /*
-         Plane hit test results are generally smooth. If we did *not* hit a plane,
-         smooth the movement to prevent large jumps.
-         */
-        let transform = result.worldTransform
-        let isOnPlane = result.anchor is ARPlaneAnchor
-        object.setTransform(transform,
-                            relativeTo: cameraTransform,
-                            smoothMovement: !isOnPlane,
-                            alignment: planeAlignment,
-                            allowAnimation: allowAnimation)
     }
 }
 

@@ -20,8 +20,12 @@ class ViewController: UIViewController {
     @IBOutlet weak var blurView: UIVisualEffectView!
     
     @IBOutlet weak var spinner: UIActivityIndicatorView!
+    
+    @IBOutlet weak var upperControlsView: UIView!
 
     // MARK: - UI Elements
+    
+    let coachingOverlay = ARCoachingOverlayView()
     
     var focusSquare = FocusSquare()
     
@@ -64,6 +68,9 @@ class ViewController: UIViewController {
         
         sceneView.delegate = self
         sceneView.session.delegate = self
+        
+        // Set up coaching overlay.
+        setupCoachingOverlay()
 
         // Set up scene content.
         setupCamera()
@@ -134,21 +141,25 @@ class ViewController: UIViewController {
     // MARK: - Focus Square
 
     func updateFocusSquare(isObjectVisible: Bool) {
-        if isObjectVisible {
+        if isObjectVisible || coachingOverlay.isActive {
             focusSquare.hide()
         } else {
             focusSquare.unhide()
             statusViewController.scheduleMessage("TRY MOVING LEFT OR RIGHT", inSeconds: 5.0, messageType: .focusSquare)
         }
         
-        // Perform hit testing only when ARKit tracking is in a good state.
+        // Perform ray casting only when ARKit tracking is in a good state.
         if let camera = session.currentFrame?.camera, case .normal = camera.trackingState,
-            let result = self.sceneView.smartHitTest(screenCenter) {
+            let query = getRaycastQuery(),
+            let result = session.raycast(query).first {
+            
             updateQueue.async {
                 self.sceneView.scene.rootNode.addChildNode(self.focusSquare)
-                self.focusSquare.state = .detecting(hitTestResult: result, camera: camera)
+                self.focusSquare.state = .detecting(raycastResult: result, camera: camera)
             }
-            addObjectButton.isHidden = false
+            if !coachingOverlay.isActive {
+                addObjectButton.isHidden = false
+            }
             statusViewController.cancelScheduledMessage(for: .focusSquare)
         } else {
             updateQueue.async {
@@ -157,6 +168,11 @@ class ViewController: UIViewController {
             }
             addObjectButton.isHidden = true
         }
+    }
+    
+    // - Tag: GetRaycastQuery
+    func getRaycastQuery() -> ARRaycastQuery? {
+        return sceneView.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: .any)
     }
     
     // MARK: - Error handling

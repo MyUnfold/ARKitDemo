@@ -3,6 +3,10 @@ See LICENSE folder for this sample’s licensing information.
 
 Abstract:
 Contains `ThresholdPanGesture` - a custom `UIPanGestureRecognizer` to track a translation threshold for panning.
+ 
+ Provides a way to delay the gesture recognizer's effect until after the gesture in progress passes a specified
+ movement threshold. This sample code's `touchesMoved(with:)` method uses this class to let the user smoothly
+ transition between dragging an object and rotating it during a single two-finger gesture.
 */
 
 import UIKit.UIGestureRecognizerSubclass

@@ -17,7 +17,7 @@ class FocusSquare: SCNNode {
     
     enum State: Equatable {
         case initializing
-        case detecting(hitTestResult: ARHitTestResult, camera: ARCamera?)
+        case detecting(raycastResult: ARRaycastResult, camera: ARCamera?)
     }
     
     // MARK: - Configuration Properties
@@ -48,7 +48,7 @@ class FocusSquare: SCNNode {
     var lastPosition: float3? {
         switch state {
         case .initializing: return nil
-        case .detecting(let hitTestResult, _): return hitTestResult.worldTransform.translation
+        case .detecting(let raycastResult, _): return raycastResult.worldTransform.translation
         }
     }
     
@@ -60,12 +60,12 @@ class FocusSquare: SCNNode {
             case .initializing:
                 displayAsBillboard()
                 
-            case let .detecting(hitTestResult, camera):
-                if let planeAnchor = hitTestResult.anchor as? ARPlaneAnchor {
-                    displayAsClosed(for: hitTestResult, planeAnchor: planeAnchor, camera: camera)
+            case let .detecting(raycastResult, camera):
+                if let planeAnchor = raycastResult.anchor as? ARPlaneAnchor {
+                    displayAsClosed(for: raycastResult, planeAnchor: planeAnchor, camera: camera)
                     currentPlaneAnchor = planeAnchor
                 } else {
-                    displayAsOpen(for: hitTestResult, camera: camera)
+                    displayAsOpen(for: raycastResult, camera: camera)
                     currentPlaneAnchor = nil
                 }
             }
@@ -75,23 +75,20 @@ class FocusSquare: SCNNode {
     /// Indicates whether the segments of the focus square are disconnected.
     private var isOpen = false
     
-    /// Indicates if the square is currently being animated.
+    /// Indicates if the square is currently being animated for opening or closing.
     private var isAnimating = false
     
-    /// Indicates if the square is currently changing its alignment.
-    private var isChangingAlignment = false
+    /// Indicates if the square is currently changing its orientation when the camera is pointing downwards.
+    private var isChangingOrientation = false
     
-    /// The focus square's current alignment.
-    private var currentAlignment: ARPlaneAnchor.Alignment?
+    /// Indicates if the camera is currently pointing towards the floor.
+    private var isPointingDownwards = true
     
     /// The current plane anchor if the focus square is on a plane.
     private(set) var currentPlaneAnchor: ARPlaneAnchor?
     
     /// The focus square's most recent positions.
     private var recentFocusSquarePositions: [float3] = []
-    
-    /// The focus square's most recent alignments.
-    private(set) var recentFocusSquareAlignments: [ARPlaneAnchor.Alignment] = []
     
     /// Previously visited plane anchors.
     private var anchorsOfVisitedPlanes: Set<ARAnchor> = []
@@ -101,6 +98,9 @@ class FocusSquare: SCNNode {
     
     /// The primary node that controls the position of other `FocusSquare` nodes.
     private let positioningNode = SCNNode()
+    
+    /// A counter for managing orientation updates of the focus square.
+    private var counterToNextOrientationUpdate: Int = 0
     
     // MARK: - Initialization
     
@@ -188,26 +188,26 @@ class FocusSquare: SCNNode {
     }
 
     /// Called when a surface has been detected.
-    private func displayAsOpen(for hitTestResult: ARHitTestResult, camera: ARCamera?) {
+    private func displayAsOpen(for raycastResult: ARRaycastResult, camera: ARCamera?) {
         performOpenAnimation()
-        let position = hitTestResult.worldTransform.translation
+        let position = raycastResult.worldTransform.translation
         recentFocusSquarePositions.append(position)
-        updateTransform(for: position, hitTestResult: hitTestResult, camera: camera)
+        updateTransform(for: position, raycastResult: raycastResult, camera: camera)
     }
     
     /// Called when a plane has been detected.
-    private func displayAsClosed(for hitTestResult: ARHitTestResult, planeAnchor: ARPlaneAnchor, camera: ARCamera?) {
+    private func displayAsClosed(for raycastResult: ARRaycastResult, planeAnchor: ARPlaneAnchor, camera: ARCamera?) {
         performCloseAnimation(flash: !anchorsOfVisitedPlanes.contains(planeAnchor))
         anchorsOfVisitedPlanes.insert(planeAnchor)
-        let position = hitTestResult.worldTransform.translation
+        let position = raycastResult.worldTransform.translation
         recentFocusSquarePositions.append(position)
-        updateTransform(for: position, hitTestResult: hitTestResult, camera: camera)
+        updateTransform(for: position, raycastResult: raycastResult, camera: camera)
     }
     
     // MARK: Helper Methods
 
     /// Update the transform of the focus square to be aligned with the camera.
-    private func updateTransform(for position: float3, hitTestResult: ARHitTestResult, camera: ARCamera?) {
+    private func updateTransform(for position: float3, raycastResult: ARRaycastResult, camera: ARCamera?) {
         // Average using several most recent positions.
         recentFocusSquarePositions = Array(recentFocusSquarePositions.suffix(10))
         
@@ -216,103 +216,40 @@ class FocusSquare: SCNNode {
         self.simdPosition = average
         self.simdScale = float3(scaleBasedOnDistance(camera: camera))
         
-        // Correct y rotation of camera square.
+        // Correct y rotation when camera is close to horizontal
+        // to avoid jitter due to gimbal lock.
         guard let camera = camera else { return }
         let tilt = abs(camera.eulerAngles.x)
-        let threshold1: Float = .pi / 2 * 0.65
-        let threshold2: Float = .pi / 2 * 0.75
-        let yaw = atan2f(camera.transform.columns.0.x, camera.transform.columns.1.x)
-        var angle: Float = 0
+        let threshold: Float = .pi / 2 * 0.75
         
-        switch tilt {
-        case 0..<threshold1:
-            angle = camera.eulerAngles.y
-            
-        case threshold1..<threshold2:
-            let relativeInRange = abs((tilt - threshold1) / (threshold2 - threshold1))
-            let normalizedY = normalize(camera.eulerAngles.y, forMinimalRotationTo: yaw)
-            angle = normalizedY * (1 - relativeInRange) + yaw * relativeInRange
-            
-        default:
-            angle = yaw
-        }
-        
-        if state != .initializing {
-            updateAlignment(for: hitTestResult, yRotationAngle: angle)
-        }
-    }
-    
-    private func updateAlignment(for hitTestResult: ARHitTestResult, yRotationAngle angle: Float) {
-        // Abort if an animation is currently in progress.
-        if isChangingAlignment {
-            return
-        }
-        
-        var shouldAnimateAlignmentChange = false
-        
-        let tempNode = SCNNode()
-        tempNode.simdRotation = float4(0, 1, 0, angle)
-        
-        // Determine current alignment
-        var alignment: ARPlaneAnchor.Alignment?
-        if let planeAnchor = hitTestResult.anchor as? ARPlaneAnchor {
-            alignment = planeAnchor.alignment
-        } else if hitTestResult.type == .estimatedHorizontalPlane {
-            alignment = .horizontal
-        } else if hitTestResult.type == .estimatedVerticalPlane {
-            alignment = .vertical
-        }
-        
-        // add to list of recent alignments
-        if alignment != nil {
-            recentFocusSquareAlignments.append(alignment!)
-        }
-        
-        // Average using several most recent alignments.
-        recentFocusSquareAlignments = Array(recentFocusSquareAlignments.suffix(20))
-        
-        let horizontalHistory = recentFocusSquareAlignments.filter({ $0 == .horizontal }).count
-        let verticalHistory = recentFocusSquareAlignments.filter({ $0 == .vertical }).count
-        
-        // Alignment is same as most of the history - change it
-        if alignment == .horizontal && horizontalHistory > 15 ||
-            alignment == .vertical && verticalHistory > 10 ||
-            hitTestResult.anchor is ARPlaneAnchor {
-            if alignment != currentAlignment {
-                shouldAnimateAlignmentChange = true
-                currentAlignment = alignment
-                recentFocusSquareAlignments.removeAll()
+        if tilt > threshold {
+            if !isChangingOrientation {
+                let yaw = atan2f(camera.transform.columns.0.x, camera.transform.columns.1.x)
+                
+                isChangingOrientation = true
+                SCNTransaction.begin()
+                SCNTransaction.completionBlock = {
+                    self.isChangingOrientation = false
+                    self.isPointingDownwards = true
+                }
+                SCNTransaction.animationDuration = isPointingDownwards ? 0.0 : 0.5
+                self.simdOrientation = simd_quatf(angle: yaw, axis: float3(0, 1, 0))
+                SCNTransaction.commit()
             }
         } else {
-            // Alignment is different than most of the history - ignore it
-            alignment = currentAlignment
-            return
-        }
-        
-        if alignment == .vertical {
-            tempNode.simdOrientation = hitTestResult.worldTransform.orientation
-            shouldAnimateAlignmentChange = true
-        }
-        
-        // Change the focus square's alignment
-        if shouldAnimateAlignmentChange {
-            performAlignmentAnimation(to: tempNode.simdOrientation)
-        } else {
-            simdOrientation = tempNode.simdOrientation
-        }
-    }
-    
-    private func normalize(_ angle: Float, forMinimalRotationTo ref: Float) -> Float {
-        // Normalize angle in steps of 90 degrees such that the rotation to the other angle is minimal
-        var normalized = angle
-        while abs(normalized - ref) > .pi / 4 {
-            if angle > ref {
-                normalized -= .pi / 2
-            } else {
-                normalized += .pi / 2
+            // Update orientation only twice per second to avoid jitter.
+            if counterToNextOrientationUpdate == 30 || isPointingDownwards {
+                counterToNextOrientationUpdate = 0
+                isPointingDownwards = false
+                
+                SCNTransaction.begin()
+                SCNTransaction.animationDuration = 0.5
+                self.simdOrientation = raycastResult.worldTransform.orientation
+                SCNTransaction.commit()
             }
+            
+            counterToNextOrientationUpdate += 1
         }
-        return normalized
     }
 
     /**
@@ -404,18 +341,6 @@ class FocusSquare: SCNNode {
                 segment.runAction(.sequence([waitAction, flashSquareAction]))
             }
          }
-    }
-    
-    private func performAlignmentAnimation(to newOrientation: simd_quatf) {
-        isChangingAlignment = true
-        SCNTransaction.begin()
-        SCNTransaction.completionBlock = {
-            self.isChangingAlignment = false
-        }
-        SCNTransaction.animationDuration = 0.5
-        SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
-        simdOrientation = newOrientation
-        SCNTransaction.commit()
     }
     
     // MARK: Convenience Methods
