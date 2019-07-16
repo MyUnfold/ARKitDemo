@@ -16,7 +16,7 @@ class VirtualObject: SCNReferenceNode {
         return referenceURL.lastPathComponent.replacingOccurrences(of: ".scn", with: "")
     }
     
-    /// Allowed alignments for the virtual object
+    /// The alignments that are allowed for a virtual object.
     var allowedAlignment: ARRaycastQuery.TargetAlignment {
         if modelName == "sticky note" {
             return .any
@@ -27,8 +27,9 @@ class VirtualObject: SCNReferenceNode {
         }
     }
     
-    /// For correct rotation on horizontal and vertical surfaces, rotate around
-    /// local y rather than world y. Therefore rotate first child note instead of self.
+    /// Rotates the first child node of a virtual object.
+    /// - Note: For correct rotation on horizontal and vertical surfaces, rotate around
+    /// local y rather than world y.
     var objectRotation: Float {
         get {
             return childNodes.first!.eulerAngles.y
@@ -38,18 +39,25 @@ class VirtualObject: SCNReferenceNode {
         }
     }
     
-    /// The object's corresponding ARAnchor
+    /// The object's corresponding ARAnchor.
     var anchor: ARAnchor?
     
-    /// The associated tracked raycast used to place this object
+    /// The associated tracked raycast used to place this object.
     var raycast: ARTrackedRaycast?
     
-    /// Flag to signal that the associated anchor needs to be updated
-    /// at the end of a pan gesture or when the object is repositioned
+    /// Flag that indicates the associated anchor should be updated
+    /// at the end of a pan gesture or when the object is repositioned.
     var shouldUpdateAnchor = false
     
-    // MARK: - Helper methods to determine supported placement options
+    /// Stops tracking the object's position and orientation.
+    /// - Tag: StopTrackedRaycasts
+    func stopTrackedRaycast() {
+        raycast?.stopTracking()
+        raycast = nil
+    }
     
+    // MARK: - Helper methods to determine supported placement options
+    /// Determines whether a virtual object can be placed on a given plane anchor.
     func isPlacementValid(on planeAnchor: ARPlaneAnchor?) -> Bool {
         if let anchor = planeAnchor {
             switch allowedAlignment {
@@ -64,7 +72,6 @@ class VirtualObject: SCNReferenceNode {
 
 extension VirtualObject {
     // MARK: Static Properties and Methods
-    
     /// Loads all the model objects within `Models.scnassets`.
     static let availableObjects: [VirtualObject] = {
         let modelsURL = Bundle.main.url(forResource: "Models.scnassets", withExtension: nil)!

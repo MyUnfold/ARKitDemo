@@ -26,13 +26,6 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
             let planeAnchor = focusSquare.currentPlaneAnchor
             objectsViewController?.updateObjectAvailability(for: planeAnchor)
         }
-        
-        // If light estimation is enabled, update the intensity of the directional lights
-        if let lightEstimate = session.currentFrame?.lightEstimate {
-            sceneView.updateDirectionalLighting(intensity: lightEstimate.ambientIntensity, queue: updateQueue)
-        } else {
-            sceneView.updateDirectionalLighting(intensity: 1000, queue: updateQueue)
-        }
     }
     
     func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {

@@ -190,24 +190,32 @@ class FocusSquare: SCNNode {
     /// Called when a surface has been detected.
     private func displayAsOpen(for raycastResult: ARRaycastResult, camera: ARCamera?) {
         performOpenAnimation()
-        let position = raycastResult.worldTransform.translation
-        recentFocusSquarePositions.append(position)
-        updateTransform(for: position, raycastResult: raycastResult, camera: camera)
+        setPosition(with: raycastResult, camera)
     }
-    
+        
     /// Called when a plane has been detected.
     private func displayAsClosed(for raycastResult: ARRaycastResult, planeAnchor: ARPlaneAnchor, camera: ARCamera?) {
         performCloseAnimation(flash: !anchorsOfVisitedPlanes.contains(planeAnchor))
         anchorsOfVisitedPlanes.insert(planeAnchor)
-        let position = raycastResult.worldTransform.translation
-        recentFocusSquarePositions.append(position)
-        updateTransform(for: position, raycastResult: raycastResult, camera: camera)
+        setPosition(with: raycastResult, camera)
     }
     
-    // MARK: Helper Methods
+    // - Tag: Set3DPosition
+    func setPosition(with raycastResult: ARRaycastResult, _ camera: ARCamera?) {
+        let position = raycastResult.worldTransform.translation
+        recentFocusSquarePositions.append(position)
+        updateTransform(for: raycastResult, camera: camera)
+    }
 
+    // MARK: Helper Methods
+    
+    // - Tag: Set3DOrientation
+    func updateOrientation(basedOn raycastResult: ARRaycastResult) {
+        self.simdOrientation = raycastResult.worldTransform.orientation
+    }
+    
     /// Update the transform of the focus square to be aligned with the camera.
-    private func updateTransform(for position: float3, raycastResult: ARRaycastResult, camera: ARCamera?) {
+    private func updateTransform(for raycastResult: ARRaycastResult, camera: ARCamera?) {
         // Average using several most recent positions.
         recentFocusSquarePositions = Array(recentFocusSquarePositions.suffix(10))
         
@@ -244,7 +252,7 @@ class FocusSquare: SCNNode {
                 
                 SCNTransaction.begin()
                 SCNTransaction.animationDuration = 0.5
-                self.simdOrientation = raycastResult.worldTransform.orientation
+                updateOrientation(basedOn: raycastResult)
                 SCNTransaction.commit()
             }
             

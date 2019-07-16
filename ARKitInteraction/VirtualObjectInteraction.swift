@@ -22,6 +22,9 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
     /// The scene view to hit test against when moving virtual content.
     let sceneView: VirtualObjectARView
     
+    /// A reference to the view controller.
+    let viewController: ViewController
+    
     /**
      The object that has been most recently intereacted with.
      The `selectedObject` can be moved at any time with the tap gesture.
@@ -39,8 +42,9 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
     /// The tracked screen position used to update the `trackedObject`'s position.
     private var currentTrackingPosition: CGPoint?
     
-    init(sceneView: VirtualObjectARView) {
+    init(sceneView: VirtualObjectARView, viewController: ViewController) {
         self.sceneView = sceneView
+        self.viewController = viewController
         super.init()
         
         createPanGestureRecognizer(sceneView)
@@ -66,37 +70,43 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
     func didPan(_ gesture: ThresholdPanGesture) {
         switch gesture.state {
         case .began:
-            // Check for interaction with a new object.
+            // Check for an object at the touch location.
             if let object = objectInteracting(with: gesture, in: sceneView) {
                 trackedObject = object
             }
             
         case .changed where gesture.isThresholdExceeded:
             guard let object = trackedObject else { return }
-            let translation = gesture.translation(in: sceneView)
-            
-            let currentPosition = currentTrackingPosition ?? CGPoint(sceneView.projectPoint(object.position))
-            
-            currentTrackingPosition = CGPoint(x: currentPosition.x + translation.x, y: currentPosition.y + translation.y)
-            translate(object, basedOn: currentTrackingPosition!)
+            // Move an object if the displacment threshold has been met.
+            translate(object, basedOn: updatedTrackingPosition(for: object, from: gesture))
 
             gesture.setTranslation(.zero, in: sceneView)
             
         case .changed:
-            // Ignore changes to the pan gesture until the threshold for displacment has been exceeded.
+            // Ignore the pan gesture until the displacment threshold is exceeded.
             break
             
         case .ended:
-            // Update the object's anchor when the gesture ended.
-            guard let existingTrackedObject = trackedObject else { break }
-            existingTrackedObject.shouldUpdateAnchor = true
+            // Update the object's position when the user stops panning.
+            guard let object = trackedObject else { break }
+            setDown(object, basedOn: updatedTrackingPosition(for: object, from: gesture))
+            
             fallthrough
             
         default:
-            // Clear the current position tracking.
+            // Reset the current position tracking.
             currentTrackingPosition = nil
             trackedObject = nil
         }
+    }
+    
+    func updatedTrackingPosition(for object: VirtualObject, from gesture: UIPanGestureRecognizer) -> CGPoint {
+        let translation = gesture.translation(in: sceneView)
+        
+        let currentPosition = currentTrackingPosition ?? CGPoint(sceneView.projectPoint(object.position))
+        let updatedPosition = CGPoint(x: currentPosition.x + translation.x, y: currentPosition.y + translation.y)
+        currentTrackingPosition = updatedPosition
+        return updatedPosition
     }
 
     /**
@@ -113,17 +123,19 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
         gesture.rotation = 0
     }
     
+    /// Handles the interaction when the user taps the screen.
     @objc
     func didTap(_ gesture: UITapGestureRecognizer) {
         let touchLocation = gesture.location(in: sceneView)
         
         if let tappedObject = sceneView.virtualObject(at: touchLocation) {
-            // Select a new object.
+            
+            // If an object exists at the tap location, select it.
             selectedObject = tappedObject
         } else if let object = selectedObject {
-            // Teleport the object to whereever the user touched the screen.
-            translate(object, basedOn: touchLocation)
-            object.shouldUpdateAnchor = true
+            
+            // Otherwise, move the selected object to its new position at the tap location.
+            setDown(object, basedOn: touchLocation)
         }
     }
     
@@ -156,8 +168,30 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
     // MARK: - Update object position
     /// - Tag: DragVirtualObject
     func translate(_ object: VirtualObject, basedOn screenPos: CGPoint) {
+        object.stopTrackedRaycast()
+        
+        // Update the object by using a one-time position request.
         if let query = sceneView.raycastQuery(from: screenPos, allowing: .estimatedPlane, alignment: object.allowedAlignment) {
-            object.raycast?.update(query)
+            viewController.createRaycastAndUpdate3DPosition(of: object, from: query)
+        }
+    }
+    
+    func setDown(_ object: VirtualObject, basedOn screenPos: CGPoint) {
+        object.stopTrackedRaycast()
+        
+        // Prepare to update the object's anchor to the current location.
+        object.shouldUpdateAnchor = true
+        
+        // Attempt to create a new tracked raycast from the current location.
+        if let query = sceneView.raycastQuery(from: screenPos, allowing: .estimatedPlane, alignment: object.allowedAlignment),
+            let raycast = viewController.createTrackedRaycastAndSet3DPosition(of: object, from: query) {
+            object.raycast = raycast
+        } else {
+            // If the tracked raycast did not succeed, simply update the anchor to the object's current position.
+            object.shouldUpdateAnchor = false
+            viewController.updateQueue.async {
+                self.sceneView.addOrUpdateAnchor(for: object)
+            }
         }
     }
 }

@@ -35,47 +35,6 @@ class VirtualObjectARView: ARSCNView {
         object.anchor = newAnchor
         session.add(anchor: newAnchor)
     }
-    
-    // - MARK: Lighting
-    
-    var lightingRootNode: SCNNode? {
-        return scene.rootNode.childNode(withName: "lightingRootNode", recursively: true)
-    }
-    
-    func setupDirectionalLighting(queue: DispatchQueue) {
-        guard self.lightingRootNode == nil else {
-            return
-        }
-        
-        // Add directional lighting for dynamic highlights in addition to environment-based lighting.
-        guard let lightingScene = SCNScene(named: "lighting.scn", inDirectory: "Models.scnassets", options: nil) else {
-            print("Error setting up directional lights: Could not find lighting scene in resources.")
-            return
-        }
-        
-        let lightingRootNode = SCNNode()
-        lightingRootNode.name = "lightingRootNode"
-        
-        for node in lightingScene.rootNode.childNodes where node.light != nil {
-            lightingRootNode.addChildNode(node)
-        }
-        
-        queue.async {
-            self.scene.rootNode.addChildNode(lightingRootNode)
-        }
-    }
-    
-    func updateDirectionalLighting(intensity: CGFloat, queue: DispatchQueue) {
-        guard let lightingRootNode = self.lightingRootNode else {
-            return
-        }
-        
-        queue.async {
-            for node in lightingRootNode.childNodes {
-                node.light?.intensity = intensity
-            }
-        }
-    }
 }
 
 extension SCNView {

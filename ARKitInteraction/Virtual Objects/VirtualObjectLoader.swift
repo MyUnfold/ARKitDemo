@@ -48,9 +48,12 @@ class VirtualObjectLoader {
     func removeVirtualObject(at index: Int) {
         guard loadedObjects.indices.contains(index) else { return }
         
+        // Stop the object's tracked ray cast.
+        loadedObjects[index].stopTrackedRaycast()
+        
+        // Remove the visual node from the scene graph.
         loadedObjects[index].removeFromParentNode()
-        loadedObjects[index].raycast?.stopTracking()
-        loadedObjects[index].raycast = nil
+        // Recoup resources allocated by the object.
         loadedObjects[index].unload()
         loadedObjects.remove(at: index)
     }

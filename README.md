@@ -4,9 +4,9 @@ Place virtual content on real-world surfaces, and enable the user to interact wi
 
 ## Overview
 
-The key facet of an AR experience is the ability to intermix virtual and real-world objects. A flat surface is the optimum location for setting a virtual object. To assist ARKit with finding surfaces, you tell the user to move their device in ways that help ARKit initialize the session. ARKit provides a view that tailors its instructions to the user for you, guiding them to the surface that your app needs. 
+The key facet of an AR experience is the ability to intermix virtual and real-world objects. A flat surface is the optimum location for setting a virtual object. To assist ARKit with finding surfaces, you tell the user to move their device in ways that help ARKit prepare the experience. ARKit provides a view that tailors its instructions to the user, guiding them to the surface that your app needs. 
 
-To enable the user to put a virtual item on the real-world surface when they tap the screen, ARKit incorporates ray casting, which provides a 3D location in physical space that corresponds to the screen's touch location. If the user wants to rotate or otherwise move the virtual items they place, you respond to the respective touch gestures and correlate that input to the virtual content's look in the physical environment. 
+To enable the user to put a virtual item on the real-world surface when they tap the screen, ARKit incorporates ray casting, which provides a 3D location in physical space that corresponds to the screen's touch location. When the user rotates or otherwise moves the virtual items they place, you respond to the respective touch gestures and correlate that input to the virtual content's look in the physical environment. 
 
 - Note: ARKit requires a device with an A9 or later processor. ARKit is not available in iOS Simulator.
 
@@ -70,29 +70,39 @@ func getRaycastQuery() -> ARRaycastQuery? {
 Then, you execute the ray-cast query by asking the session to cast it. 
 
 ``` swift
-func getTrackedRaycast(_ query: ARRaycastQuery, virtualObject: VirtualObject) -> ARTrackedRaycast? {
-    return session.trackedRaycast(query) { (results) in
-        self.setVirtualObject3DPosition(results, with: virtualObject)
-    }
+func castRay(for query: ARRaycastQuery) -> [ARRaycastResult] {
+    return session.raycast(query)
 }
 ```
-[View in Source](x-source-tag://GetTrackedRaycast)
+[View in Source](x-source-tag://CastRayForFocusSquarePosition)
 
-ARKit returns a position in the `results` parameter that includes the depth of where that point lies on a surface in the real world, and how the surface is angled with respect to gravity. That information is wrapped in the ray cast result's [`worldTransform`][16], which you set on your virtual object's [`simdWorldTransform`][15] to effectively place your virtual object in the physical environment.
+ARKit returns a position in the `results` parameter that includes the depth of where that point lies on a surface in the real world. To give the user a preview of where on the real-world surface a user can place their virtual content, update the focus square's position using the ray-cast result's [`worldTransform`][16]:
 
 ``` swift
-func setPosition(of virtualObject: VirtualObject, with result: ARRaycastResult) {
-    virtualObject.simdWorldTransform = result.worldTransform
+func setPosition(with raycastResult: ARRaycastResult, _ camera: ARCamera?) {
+    let position = raycastResult.worldTransform.translation
+    recentFocusSquarePositions.append(position)
+    updateTransform(for: raycastResult, camera: camera)
 }
 ```
 [View in Source](x-source-tag://Set3DPosition)
+
+The ray-cast result also indicates how the surface is angled with respect to gravity. To preview the angle at which the user's virtual content can be placed on the surface, update the focus square's [`simdWorldTransform`][15] with the result's orientation. 
+
+``` swift
+func updateOrientation(basedOn raycastResult: ARRaycastResult) {
+    self.simdOrientation = raycastResult.worldTransform.orientation
+}
+```
+[View in Source](x-source-tag://Set3DOrientation)
 
 If your app offers different types of virtual content, give the user an interface to choose from. The sample app exposes a selection menu when the user taps the plus button. When the user chooses an item from the list, you instantiate the corresponding 3D model and anchor it in the world at the focus square's current position. 
 
 ``` swift
 func placeVirtualObject(_ virtualObject: VirtualObject) {
     guard focusSquare.state != .initializing,
-    let query = sceneView.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: virtualObject.allowedAlignment) else {
+    let query = sceneView.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: virtualObject.allowedAlignment),
+    let raycast = createTrackedRaycastAndSet3DPosition(of: virtualObject, from: query) else {
         self.statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
         if let controller = self.objectsViewController {
             self.virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
@@ -100,18 +110,19 @@ func placeVirtualObject(_ virtualObject: VirtualObject) {
         return
     }
     
-    virtualObject.raycast = getTrackedRaycast(query, virtualObject: virtualObject)
+    virtualObject.raycast = raycast
     virtualObjectInteraction.selectedObject = virtualObject
+    virtualObject.isHidden = false
 }
 ```
 [View in Source](x-source-tag://PlaceVirtualObject)
 
 ## Refine the Position of Virtual Content Over Time
 
-As the session runs, ARKit analyzes each camera image and learns more about the layout of the physical environment. When ARKit updates its estimated size, shape, and position of real-world planes, you may need to update the position of your app's virtual content. Opt in to notification of these events by creating an [ARTrackedRaycast][3], and providing a ray-cast query that tells ARKit which updates you're interested in. 
+As the session runs, ARKit analyzes each camera image and learns more about the layout of the physical environment. When ARKit updates its estimated size and position of real-world surfaces, you may need to update the position of your app's virtual content to match. To help make it easy, ARKit notifies you when it corrects its understanding of the scene by way of an [ARTrackedRaycast][3]. 
 
 ``` swift
-func getTrackedRaycast(_ query: ARRaycastQuery, virtualObject: VirtualObject) -> ARTrackedRaycast? {
+func createTrackedRaycastAndSet3DPosition(of virtualObject: VirtualObject, from query: ARRaycastQuery) -> ARTrackedRaycast? {
     return session.trackedRaycast(query) { (results) in
         self.setVirtualObject3DPosition(results, with: virtualObject)
     }
@@ -119,26 +130,16 @@ func getTrackedRaycast(_ query: ARRaycastQuery, virtualObject: VirtualObject) ->
 ```
 [View in Source](x-source-tag://GetTrackedRaycast)
 
-As ARKit repeats your ray-cast query, it gives you the results only when they differ from prior results. Pass a closure to the [`trackedRaycast`][8] to define your response to these events, where you update the position of your app's virtual content accordingly. 
+ARKit successively repeats the query you provide to a tracked ray cast, and it calls the closure you provide only when the results differ from prior results. The code you provide in the closure is your response to ARKit's updated scene understanding. In this case, you check your ray-cast intersections against the updated planes and apply those positions to your app's virtual content. 
 
 ``` swift
-func setVirtualObject3DPosition(_ results: [ARRaycastResult], with virtualObject: VirtualObject) {
+private func setVirtualObject3DPosition(_ results: [ARRaycastResult], with virtualObject: VirtualObject) {
+    
     guard let result = results.first else {
         fatalError("Unexpected case: the update handler is always supposed to return at least one result.")
     }
     
-    if virtualObject.allowedAlignment == .any && self.virtualObjectInteraction.trackedObject == virtualObject {
-        
-        // If an object that's aligned to a surface is being dragged, then
-        // smoothen its orientation to avoid visible jumps, and apply only the translation directly.
-        virtualObject.simdWorldPosition = result.worldTransform.translation
-        
-        let previousOrientation = virtualObject.simdWorldTransform.orientation
-        let currentOrientation = result.worldTransform.orientation
-        virtualObject.simdWorldOrientation = simd_slerp(previousOrientation, currentOrientation, 0.1)
-    } else {
-        self.setPosition(of: virtualObject, with: result)
-    }
+    self.setTransform(of: virtualObject, with: result)
     
     // If the virtual object is not yet in the scene, add it.
     if virtualObject.parent == nil {
@@ -156,24 +157,36 @@ func setVirtualObject3DPosition(_ results: [ARRaycastResult], with virtualObject
 ```
 [View in Source](x-source-tag://ProcessRaycastResults)
 
-- Note: If you don't need to continue to improve the position of your app's virtual content as ARKit refines its model of the world, execute a one time query via [`raycast(_:)`][9] instead of using a tracked ray cast.
-
 ## Manage Tracked Ray Casts
 
-Because ARKit continues to call them, tracked ray casts can increasingly consume resources with the more virtual content a user places. Stop the tracked ray cast when you're satisfied with its associated virtual object's position, or when you remove the virtual object from your scene.
+Because ARKit continues to call them, tracked ray casts can increasingly consume resources as the user places more virtual content. Stop the tracked ray cast when you no longer need refined positions over time, such as when a virtual balloon takes flight, or when you remove a virtual object from your scene.
 
 ``` swift
 func removeVirtualObject(at index: Int) {
     guard loadedObjects.indices.contains(index) else { return }
     
+    // Stop the object's tracked ray cast.
+    loadedObjects[index].stopTrackedRaycast()
+    
+    // Remove the visual node from the scene graph.
     loadedObjects[index].removeFromParentNode()
-    loadedObjects[index].raycast?.stopTracking()
-    loadedObjects[index].raycast = nil
+    // Recoup resources allocated by the object.
     loadedObjects[index].unload()
     loadedObjects.remove(at: index)
 }
 ```
 [View in Source](x-source-tag://RemoveVirtualObject)
+
+To stop a tracked ray cast, you call its [`stopTracking`][17] function: 
+
+``` swift
+func stopTrackedRaycast() {
+    raycast?.stopTracking()
+    raycast = nil
+}
+```
+[View in Source](x-source-tag://StopTrackedRaycasts)
+
 
 ## Enable User Interaction with Virtual Content
 
@@ -188,12 +201,15 @@ func createPanGestureRecognizer(_ sceneView: VirtualObjectARView) {
 ```
 [View in Source](x-source-tag://CreatePanGesture)
 
-When you move a virtual object, you keep the object subscribed for positional updates from ARKit by updating its tracked ray cast with a new query. 
+When the user pans an object, you request its position along the object's path across the plane. Because the object's position is transitory, use a [`raycast(_:)`][9] instead of using a tracked ray cast. In this case, a one-time hit test is appropriate because you don't need refined position results over time for these requests. 
 
 ``` swift
 func translate(_ object: VirtualObject, basedOn screenPos: CGPoint) {
+    object.stopTrackedRaycast()
+    
+    // Update the object by using a one-time position request.
     if let query = sceneView.raycastQuery(from: screenPos, allowing: .estimatedPlane, alignment: object.allowedAlignment) {
-        object.raycast?.update(query)
+        viewController.createRaycastAndUpdate3DPosition(of: object, from: query)
     }
 }
 ```
@@ -215,7 +231,7 @@ func didRotate(_ gesture: UIRotationGestureRecognizer) {
 
 ## Handle Interruption in Tracking
 
-In cases where tracking conditions are poor, ARKit invokes your delegate's [`sessionWasInterrupted(_:)`][5]. In these circumstances, the positions of your app's virtual content may be inaccurate with respect to the camera feed, so you hide your virtual content. 
+In cases where tracking conditions are poor, ARKit invokes your delegate's [`sessionWasInterrupted(_:)`][5]. In these circumstances, the positions of your app's virtual content may be inaccurate with respect to the camera feed, so hide your virtual content. 
 
 ``` swift
 func hideVirtualContent() {
@@ -296,3 +312,4 @@ func coachingOverlayViewDidRequestSessionReset(_ coachingOverlayView: ARCoaching
 [14]:https://developer.apple.com/documentation/arkit/arcoachingoverlayviewdelegate/3152983-coachingoverlayviewdiddeactivate
 [15]:https://developer.apple.com/documentation/scenekit/scnnode/2881868-simdworldtransform
 [16]:https://developer.apple.com/documentation/arkit/arraycastresult/3132062-worldtransform
+[17]:https://developer.apple.com/documentation/arkit/artrackedraycast/3132069-stoptracking

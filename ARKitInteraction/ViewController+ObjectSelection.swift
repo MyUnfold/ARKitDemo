@@ -15,7 +15,8 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
      - Tag: PlaceVirtualObject */
     func placeVirtualObject(_ virtualObject: VirtualObject) {
         guard focusSquare.state != .initializing,
-        let query = sceneView.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: virtualObject.allowedAlignment) else {
+        let query = sceneView.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: virtualObject.allowedAlignment),
+        let raycast = createTrackedRaycastAndSet3DPosition(of: virtualObject, from: query) else {
             self.statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
             if let controller = self.objectsViewController {
                 self.virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
@@ -23,21 +24,21 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
             return
         }
         
-        virtualObject.raycast = getTrackedRaycast(query, virtualObject: virtualObject)
+        virtualObject.raycast = raycast
         virtualObjectInteraction.selectedObject = virtualObject
+        virtualObject.isHidden = false
     }
     
     // - Tag: GetTrackedRaycast
-    func getTrackedRaycast(_ query: ARRaycastQuery, virtualObject: VirtualObject) -> ARTrackedRaycast? {
+    func createTrackedRaycastAndSet3DPosition(of virtualObject: VirtualObject, from query: ARRaycastQuery) -> ARTrackedRaycast? {
         return session.trackedRaycast(query) { (results) in
             self.setVirtualObject3DPosition(results, with: virtualObject)
         }
     }
     
-    // - Tag: ProcessRaycastResults
-    func setVirtualObject3DPosition(_ results: [ARRaycastResult], with virtualObject: VirtualObject) {
-        guard let result = results.first else {
-            fatalError("Unexpected case: the update handler is always supposed to return at least one result.")
+    func createRaycastAndUpdate3DPosition(of virtualObject: VirtualObject, from query: ARRaycastQuery) {
+        guard let result = session.raycast(query).first else {
+            return
         }
         
         if virtualObject.allowedAlignment == .any && self.virtualObjectInteraction.trackedObject == virtualObject {
@@ -50,8 +51,18 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
             let currentOrientation = result.worldTransform.orientation
             virtualObject.simdWorldOrientation = simd_slerp(previousOrientation, currentOrientation, 0.1)
         } else {
-            self.setPosition(of: virtualObject, with: result)
+            self.setTransform(of: virtualObject, with: result)
         }
+    }
+    
+    // - Tag: ProcessRaycastResults
+    private func setVirtualObject3DPosition(_ results: [ARRaycastResult], with virtualObject: VirtualObject) {
+        
+        guard let result = results.first else {
+            fatalError("Unexpected case: the update handler is always supposed to return at least one result.")
+        }
+        
+        self.setTransform(of: virtualObject, with: result)
         
         // If the virtual object is not yet in the scene, add it.
         if virtualObject.parent == nil {
@@ -67,8 +78,7 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
         }
     }
     
-    // - Tag: Set3DPosition
-    func setPosition(of virtualObject: VirtualObject, with result: ARRaycastResult) {
+    func setTransform(of virtualObject: VirtualObject, with result: ARRaycastResult) {
         virtualObject.simdWorldTransform = result.worldTransform
     }
 
@@ -83,7 +93,6 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
                     DispatchQueue.main.async {
                         self.hideObjectLoadingUI()
                         self.placeVirtualObject(loadedObject)
-                        loadedObject.isHidden = false
                     }
                 })
             } catch {

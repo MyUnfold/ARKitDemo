@@ -40,7 +40,7 @@ class ViewController: UIViewController {
     // MARK: - ARKit Configuration Properties
     
     /// A type which manages gesture manipulation of virtual content in the scene.
-    lazy var virtualObjectInteraction = VirtualObjectInteraction(sceneView: sceneView)
+    lazy var virtualObjectInteraction = VirtualObjectInteraction(sceneView: sceneView, viewController: self)
     
     /// Coordinates the loading and unloading of reference nodes for virtual objects.
     let virtualObjectLoader = VirtualObjectLoader()
@@ -73,10 +73,7 @@ class ViewController: UIViewController {
         setupCoachingOverlay()
 
         // Set up scene content.
-        setupCamera()
         sceneView.scene.rootNode.addChildNode(focusSquare)
-        
-        sceneView.setupDirectionalLighting(queue: updateQueue)
 
         // Hook up status view controller callback(s).
         statusViewController.restartExperienceHandler = { [unowned self] in
@@ -103,23 +100,6 @@ class ViewController: UIViewController {
         super.viewWillDisappear(animated)
 
         session.pause()
-    }
-
-    // MARK: - Scene content setup
-
-    func setupCamera() {
-        guard let camera = sceneView.pointOfView?.camera else {
-            fatalError("Expected a valid `pointOfView` from the scene.")
-        }
-
-        /*
-         Enable HDR camera settings for the most realistic appearance
-         with environmental lighting and physically based materials.
-         */
-        camera.wantsHDR = true
-        camera.exposureOffset = -1
-        camera.minimumExposure = -1
-        camera.maximumExposure = 3
     }
 
     // MARK: - Session management
@@ -151,7 +131,7 @@ class ViewController: UIViewController {
         // Perform ray casting only when ARKit tracking is in a good state.
         if let camera = session.currentFrame?.camera, case .normal = camera.trackingState,
             let query = getRaycastQuery(),
-            let result = session.raycast(query).first {
+            let result = castRay(for: query).first {
             
             updateQueue.async {
                 self.sceneView.scene.rootNode.addChildNode(self.focusSquare)
@@ -170,6 +150,11 @@ class ViewController: UIViewController {
         }
     }
     
+    // - Tag: CastRayForFocusSquarePosition
+    func castRay(for query: ARRaycastQuery) -> [ARRaycastResult] {
+        return session.raycast(query)
+    }
+
     // - Tag: GetRaycastQuery
     func getRaycastQuery() -> ARRaycastQuery? {
         return sceneView.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: .any)
