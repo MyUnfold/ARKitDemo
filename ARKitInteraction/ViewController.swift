@@ -31,7 +31,7 @@ class ViewController: UIViewController {
     
     /// The view controller that displays the status and "restart experience" UI.
     lazy var statusViewController: StatusViewController = {
-        return childViewControllers.lazy.compactMap({ $0 as? StatusViewController }).first!
+        return children.lazy.compactMap({ $0 as? StatusViewController }).first!
     }()
     
     /// The view controller that displays the virtual object selection menu.
@@ -50,11 +50,6 @@ class ViewController: UIViewController {
     
     /// A serial queue used to coordinate adding or removing nodes from the scene.
     let updateQueue = DispatchQueue(label: "com.example.apple-samplecode.arkitexample.serialSceneKitQueue")
-    
-    var screenCenter: CGPoint {
-        let bounds = sceneView.bounds
-        return CGPoint(x: bounds.midX, y: bounds.midY)
-    }
     
     /// Convenience accessor for the session owned by ARSCNView.
     var session: ARSession {
@@ -96,6 +91,10 @@ class ViewController: UIViewController {
         resetTracking()
     }
     
+    override var prefersHomeIndicatorAutoHidden: Bool {
+        return true
+    }
+    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
 
@@ -130,8 +129,8 @@ class ViewController: UIViewController {
         
         // Perform ray casting only when ARKit tracking is in a good state.
         if let camera = session.currentFrame?.camera, case .normal = camera.trackingState,
-            let query = getRaycastQuery(),
-            let result = castRay(for: query).first {
+            let query = sceneView.getRaycastQuery(),
+            let result = sceneView.castRay(for: query).first {
             
             updateQueue.async {
                 self.sceneView.scene.rootNode.addChildNode(self.focusSquare)
@@ -147,17 +146,8 @@ class ViewController: UIViewController {
                 self.sceneView.pointOfView?.addChildNode(self.focusSquare)
             }
             addObjectButton.isHidden = true
+            objectsViewController?.dismiss(animated: false, completion: nil)
         }
-    }
-    
-    // - Tag: CastRayForFocusSquarePosition
-    func castRay(for query: ARRaycastQuery) -> [ARRaycastResult] {
-        return session.raycast(query)
-    }
-
-    // - Tag: GetRaycastQuery
-    func getRaycastQuery() -> ARRaycastQuery? {
-        return sceneView.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: .any)
     }
     
     // MARK: - Error handling

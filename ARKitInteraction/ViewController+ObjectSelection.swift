@@ -14,23 +14,29 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
      estimated by a hit test from the center of the screen.
      - Tag: PlaceVirtualObject */
     func placeVirtualObject(_ virtualObject: VirtualObject) {
-        guard focusSquare.state != .initializing,
-        let query = sceneView.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: virtualObject.allowedAlignment),
-        let raycast = createTrackedRaycastAndSet3DPosition(of: virtualObject, from: query) else {
+        guard focusSquare.state != .initializing, let query = virtualObject.raycastQuery else {
             self.statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
             if let controller = self.objectsViewController {
                 self.virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
             }
             return
         }
+       
+        let trackedRaycast = createTrackedRaycastAndSet3DPosition(of: virtualObject, from: query,
+                                                                  withInitialResult: virtualObject.mostRecentInitialPlacementResult)
         
-        virtualObject.raycast = raycast
+        virtualObject.raycast = trackedRaycast
         virtualObjectInteraction.selectedObject = virtualObject
         virtualObject.isHidden = false
     }
     
     // - Tag: GetTrackedRaycast
-    func createTrackedRaycastAndSet3DPosition(of virtualObject: VirtualObject, from query: ARRaycastQuery) -> ARTrackedRaycast? {
+    func createTrackedRaycastAndSet3DPosition(of virtualObject: VirtualObject, from query: ARRaycastQuery,
+                                              withInitialResult initialResult: ARRaycastResult? = nil) -> ARTrackedRaycast? {
+        if let initialResult = initialResult {
+            self.setTransform(of: virtualObject, with: initialResult)
+        }
+        
         return session.trackedRaycast(query) { (results) in
             self.setVirtualObject3DPosition(results, with: virtualObject)
         }
@@ -104,7 +110,7 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
     }
     
     func virtualObjectSelectionViewController(_: VirtualObjectSelectionViewController, didDeselectObject object: VirtualObject) {
-        guard let objectIndex = virtualObjectLoader.loadedObjects.index(of: object) else {
+        guard let objectIndex = virtualObjectLoader.loadedObjects.firstIndex(of: object) else {
             fatalError("Programmer error: Failed to lookup virtual object in scene.")
         }
         virtualObjectLoader.removeVirtualObject(at: objectIndex)

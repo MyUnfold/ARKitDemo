@@ -19,12 +19,11 @@ extension ViewController: ARSCNViewDelegate, ARSessionDelegate {
         
         DispatchQueue.main.async {
             self.updateFocusSquare(isObjectVisible: isAnyObjectInView)
-        }
-        
-        // If the object selection menu is open, update availability of items
-        if objectsViewController != nil {
-            let planeAnchor = focusSquare.currentPlaneAnchor
-            objectsViewController?.updateObjectAvailability(for: planeAnchor)
+            
+            // If the object selection menu is open, update availability of items
+            if self.objectsViewController?.viewIfLoaded?.window != nil {
+                self.objectsViewController?.updateObjectAvailability()
+            }
         }
     }
     

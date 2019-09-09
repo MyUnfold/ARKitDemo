@@ -162,7 +162,11 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
         }
         
         // As a last resort look for an object under the center of the touches.
-        return sceneView.virtualObject(at: gesture.center(in: view))
+        if let center = gesture.center(in: view) {
+            return sceneView.virtualObject(at: center)
+        }
+        
+        return nil
     }
     
     // MARK: - Update object position
@@ -198,7 +202,9 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
 
 /// Extends `UIGestureRecognizer` to provide the center point resulting from multiple touches.
 extension UIGestureRecognizer {
-    func center(in view: UIView) -> CGPoint {
+    func center(in view: UIView) -> CGPoint? {
+        guard numberOfTouches > 0 else { return nil }
+        
         let first = CGRect(origin: location(ofTouch: 0, in: view), size: .zero)
 
         let touchBounds = (1..<numberOfTouches).reduce(first) { touchBounds, index in

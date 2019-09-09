@@ -61,8 +61,8 @@ To give the user an idea of where they can place virtual content, annotate the e
 To figure out where to put the square in the real world, you use an [ARRaycastQuery][2] to ask ARKit where any surfaces exist in the real world. First, you create a ray-cast query that defines the 2D point on the screen you're interested in. Because the focus square is aligned with the center of the screen, you create a query for the screen center.  
 
 ``` swift
-func getRaycastQuery() -> ARRaycastQuery? {
-    return sceneView.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: .any)
+func getRaycastQuery(for alignment: ARRaycastQuery.TargetAlignment = .any) -> ARRaycastQuery? {
+    return raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: alignment)
 }
 ```
 [View in Source](x-source-tag://GetRaycastQuery)
@@ -100,17 +100,18 @@ If your app offers different types of virtual content, give the user an interfac
 
 ``` swift
 func placeVirtualObject(_ virtualObject: VirtualObject) {
-    guard focusSquare.state != .initializing,
-    let query = sceneView.raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: virtualObject.allowedAlignment),
-    let raycast = createTrackedRaycastAndSet3DPosition(of: virtualObject, from: query) else {
+    guard focusSquare.state != .initializing, let query = virtualObject.raycastQuery else {
         self.statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
         if let controller = self.objectsViewController {
             self.virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
         }
         return
     }
+   
+    let trackedRaycast = createTrackedRaycastAndSet3DPosition(of: virtualObject, from: query,
+                                                              withInitialResult: virtualObject.mostRecentInitialPlacementResult)
     
-    virtualObject.raycast = raycast
+    virtualObject.raycast = trackedRaycast
     virtualObjectInteraction.selectedObject = virtualObject
     virtualObject.isHidden = false
 }
@@ -122,7 +123,12 @@ func placeVirtualObject(_ virtualObject: VirtualObject) {
 As the session runs, ARKit analyzes each camera image and learns more about the layout of the physical environment. When ARKit updates its estimated size and position of real-world surfaces, you may need to update the position of your app's virtual content to match. To help make it easy, ARKit notifies you when it corrects its understanding of the scene by way of an [ARTrackedRaycast][3]. 
 
 ``` swift
-func createTrackedRaycastAndSet3DPosition(of virtualObject: VirtualObject, from query: ARRaycastQuery) -> ARTrackedRaycast? {
+func createTrackedRaycastAndSet3DPosition(of virtualObject: VirtualObject, from query: ARRaycastQuery,
+                                          withInitialResult initialResult: ARRaycastResult? = nil) -> ARTrackedRaycast? {
+    if let initialResult = initialResult {
+        self.setTransform(of: virtualObject, with: initialResult)
+    }
+    
     return session.trackedRaycast(query) { (results) in
         self.setVirtualObject3DPosition(results, with: virtualObject)
     }

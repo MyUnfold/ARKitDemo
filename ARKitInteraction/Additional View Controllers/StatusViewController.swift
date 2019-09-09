@@ -153,6 +153,8 @@ extension ARCamera.TrackingState {
             return "Initializing"
         case .limited(.relocalizing):
             return "Recovering from interruption"
+        @unknown default:
+            return "Unknown tracking state."
         }
     }
 

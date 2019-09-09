@@ -41,9 +41,16 @@ class VirtualObject: SCNReferenceNode {
     
     /// The object's corresponding ARAnchor.
     var anchor: ARAnchor?
+
+    /// The raycast query used when placing this object.
+    var raycastQuery: ARRaycastQuery?
     
     /// The associated tracked raycast used to place this object.
     var raycast: ARTrackedRaycast?
+    
+    /// The most recent raycast result used for determining the initial location
+    /// of the object after placement.
+    var mostRecentInitialPlacementResult: ARRaycastResult?
     
     /// Flag that indicates the associated anchor should be updated
     /// at the end of a pan gesture or when the object is repositioned.
@@ -54,19 +61,6 @@ class VirtualObject: SCNReferenceNode {
     func stopTrackedRaycast() {
         raycast?.stopTracking()
         raycast = nil
-    }
-    
-    // MARK: - Helper methods to determine supported placement options
-    /// Determines whether a virtual object can be placed on a given plane anchor.
-    func isPlacementValid(on planeAnchor: ARPlaneAnchor?) -> Bool {
-        if let anchor = planeAnchor {
-            switch allowedAlignment {
-            case .any: return true
-            case .horizontal: return anchor.alignment == .horizontal
-            case .vertical: return anchor.alignment == .vertical
-            }
-        }
-        return true
     }
 }
 

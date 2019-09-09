@@ -45,7 +45,7 @@ class FocusSquare: SCNNode {
     // MARK: - Properties
     
     /// The most recent position of the focus square based on the current state.
-    var lastPosition: float3? {
+    var lastPosition: SIMD3<Float>? {
         switch state {
         case .initializing: return nil
         case .detecting(let raycastResult, _): return raycastResult.worldTransform.translation
@@ -63,10 +63,8 @@ class FocusSquare: SCNNode {
             case let .detecting(raycastResult, camera):
                 if let planeAnchor = raycastResult.anchor as? ARPlaneAnchor {
                     displayAsClosed(for: raycastResult, planeAnchor: planeAnchor, camera: camera)
-                    currentPlaneAnchor = planeAnchor
                 } else {
                     displayAsOpen(for: raycastResult, camera: camera)
-                    currentPlaneAnchor = nil
                 }
             }
         }
@@ -84,11 +82,8 @@ class FocusSquare: SCNNode {
     /// Indicates if the camera is currently pointing towards the floor.
     private var isPointingDownwards = true
     
-    /// The current plane anchor if the focus square is on a plane.
-    private(set) var currentPlaneAnchor: ARPlaneAnchor?
-    
     /// The focus square's most recent positions.
-    private var recentFocusSquarePositions: [float3] = []
+    private var recentFocusSquarePositions: [SIMD3<Float>] = []
     
     /// Previously visited plane anchors.
     private var anchorsOfVisitedPlanes: Set<ARAnchor> = []
@@ -131,17 +126,17 @@ class FocusSquare: SCNNode {
         
         let sl: Float = 0.5  // segment length
         let c: Float = FocusSquare.thickness / 2 // correction to align lines perfectly
-        s1.simdPosition += float3(-(sl / 2 - c), -(sl - c), 0)
-        s2.simdPosition += float3(sl / 2 - c, -(sl - c), 0)
-        s3.simdPosition += float3(-sl, -sl / 2, 0)
-        s4.simdPosition += float3(sl, -sl / 2, 0)
-        s5.simdPosition += float3(-sl, sl / 2, 0)
-        s6.simdPosition += float3(sl, sl / 2, 0)
-        s7.simdPosition += float3(-(sl / 2 - c), sl - c, 0)
-        s8.simdPosition += float3(sl / 2 - c, sl - c, 0)
+        s1.simdPosition += [-(sl / 2 - c), -(sl - c), 0]
+        s2.simdPosition += [sl / 2 - c, -(sl - c), 0]
+        s3.simdPosition += [-sl, -sl / 2, 0]
+        s4.simdPosition += [sl, -sl / 2, 0]
+        s5.simdPosition += [-sl, sl / 2, 0]
+        s6.simdPosition += [sl, sl / 2, 0]
+        s7.simdPosition += [-(sl / 2 - c), sl - c, 0]
+        s8.simdPosition += [sl / 2 - c, sl - c, 0]
         
         positioningNode.eulerAngles.x = .pi / 2 // Horizontal
-        positioningNode.simdScale = float3(FocusSquare.size * FocusSquare.scaleForClosedSquare)
+        positioningNode.simdScale = [1.0, 1.0, 1.0] * (FocusSquare.size * FocusSquare.scaleForClosedSquare)
         for segment in segments {
             positioningNode.addChildNode(segment)
         }
@@ -182,7 +177,7 @@ class FocusSquare: SCNNode {
     private func displayAsBillboard() {
         simdTransform = matrix_identity_float4x4
         eulerAngles.x = .pi / 2
-        simdPosition = float3(0, 0, -0.8)
+        simdPosition = [0, 0, -0.8]
         unhide()
         performOpenAnimation()
     }
@@ -220,9 +215,9 @@ class FocusSquare: SCNNode {
         recentFocusSquarePositions = Array(recentFocusSquarePositions.suffix(10))
         
         // Move to average of recent positions to avoid jitter.
-        let average = recentFocusSquarePositions.reduce(float3(0), { $0 + $1 }) / Float(recentFocusSquarePositions.count)
+        let average = recentFocusSquarePositions.reduce([0, 0, 0], { $0 + $1 }) / Float(recentFocusSquarePositions.count)
         self.simdPosition = average
-        self.simdScale = float3(scaleBasedOnDistance(camera: camera))
+        self.simdScale = [1.0, 1.0, 1.0] * scaleBasedOnDistance(camera: camera)
         
         // Correct y rotation when camera is close to horizontal
         // to avoid jitter due to gimbal lock.
@@ -241,7 +236,7 @@ class FocusSquare: SCNNode {
                     self.isPointingDownwards = true
                 }
                 SCNTransaction.animationDuration = isPointingDownwards ? 0.0 : 0.5
-                self.simdOrientation = simd_quatf(angle: yaw, axis: float3(0, 1, 0))
+                self.simdOrientation = simd_quatf(angle: yaw, axis: [0, 1, 0])
                 SCNTransaction.commit()
             }
         } else {
@@ -287,7 +282,7 @@ class FocusSquare: SCNNode {
 
         // Open animation
         SCNTransaction.begin()
-        SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+        SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: .easeOut)
         SCNTransaction.animationDuration = FocusSquare.animationDuration / 4
         positioningNode.opacity = 1.0
         for segment in segments {
@@ -302,9 +297,9 @@ class FocusSquare: SCNNode {
         
         // Add a scale/bounce animation.
         SCNTransaction.begin()
-        SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+        SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: .easeOut)
         SCNTransaction.animationDuration = FocusSquare.animationDuration / 4
-        positioningNode.simdScale = float3(FocusSquare.size)
+        positioningNode.simdScale = [1.0, 1.0, 1.0] * FocusSquare.size
         SCNTransaction.commit()
     }
 
@@ -318,12 +313,12 @@ class FocusSquare: SCNNode {
         
         // Close animation
         SCNTransaction.begin()
-        SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+        SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: .easeOut)
         SCNTransaction.animationDuration = FocusSquare.animationDuration / 2
         positioningNode.opacity = 0.99
         SCNTransaction.completionBlock = {
             SCNTransaction.begin()
-            SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+            SCNTransaction.animationTimingFunction = CAMediaTimingFunction(name: .easeOut)
             SCNTransaction.animationDuration = FocusSquare.animationDuration / 4
             for segment in self.segments {
                 segment.close()
@@ -356,9 +351,9 @@ class FocusSquare: SCNNode {
     private func scaleAnimation(for keyPath: String) -> CAKeyframeAnimation {
         let scaleAnimation = CAKeyframeAnimation(keyPath: keyPath)
         
-        let easeOut = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
-        let easeInOut = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
-        let linear = CAMediaTimingFunction(name: kCAMediaTimingFunctionLinear)
+        let easeOut = CAMediaTimingFunction(name: .easeOut)
+        let easeInOut = CAMediaTimingFunction(name: .easeInEaseOut)
+        let linear = CAMediaTimingFunction(name: .linear)
         
         let size = FocusSquare.size
         let ts = FocusSquare.size * FocusSquare.scaleForClosedSquare
