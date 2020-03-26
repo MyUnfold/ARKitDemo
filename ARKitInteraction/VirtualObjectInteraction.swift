@@ -175,7 +175,7 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
         object.stopTrackedRaycast()
         
         // Update the object by using a one-time position request.
-        if let query = sceneView.raycastQuery(from: screenPos, allowing: .estimatedPlane, alignment: object.allowedAlignment) {
+        if let query = sceneView.raycastQuery(from: screenPos, allowing: .estimatedPlane, alignment: .horizontal) {
             viewController.createRaycastAndUpdate3DPosition(of: object, from: query)
         }
     }
@@ -187,7 +187,7 @@ class VirtualObjectInteraction: NSObject, UIGestureRecognizerDelegate {
         object.shouldUpdateAnchor = true
         
         // Attempt to create a new tracked raycast from the current location.
-        if let query = sceneView.raycastQuery(from: screenPos, allowing: .estimatedPlane, alignment: object.allowedAlignment),
+        if let query = sceneView.raycastQuery(from: screenPos, allowing: .estimatedPlane, alignment: .horizontal),
             let raycast = viewController.createTrackedRaycastAndSet3DPosition(of: object, from: query) {
             object.raycast = raycast
         } else {

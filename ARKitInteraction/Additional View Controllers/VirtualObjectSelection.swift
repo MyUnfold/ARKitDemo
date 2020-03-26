@@ -81,7 +81,7 @@ class VirtualObjectSelectionViewController: UITableViewController {
             }
             
             // Enable row if item can be placed at the current location
-            if let query = sceneView.getRaycastQuery(for: object.allowedAlignment),
+            if let query = sceneView.getRaycastQuery(for: .horizontal),
                 let result = sceneView.castRay(for: query).first {
                 object.mostRecentInitialPlacementResult = result
                 object.raycastQuery = query

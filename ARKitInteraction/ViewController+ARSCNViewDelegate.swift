@@ -5,6 +5,8 @@ Abstract:
 ARSCNViewDelegate interactions for `ViewController`.
 */
 
+// Add code for zooming
+
 import ARKit
 
 extension ViewController: ARSCNViewDelegate, ARSessionDelegate {

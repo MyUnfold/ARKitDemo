@@ -47,7 +47,7 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
             return
         }
         
-        if virtualObject.allowedAlignment == .any && self.virtualObjectInteraction.trackedObject == virtualObject {
+        if self.virtualObjectInteraction.trackedObject == virtualObject {
             
             // If an object that's aligned to a surface is being dragged, then
             // smoothen its orientation to avoid visible jumps, and apply only the translation directly.
