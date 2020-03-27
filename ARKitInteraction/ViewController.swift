@@ -65,7 +65,7 @@ class ViewController: UIViewController {
         sceneView.session.delegate = self
         
         // Set up coaching overlay.
-        setupCoachingOverlay()
+//        setupCoachingOverlay()
 
         // Set up scene content.
         sceneView.scene.rootNode.addChildNode(focusSquare)
@@ -108,7 +108,7 @@ class ViewController: UIViewController {
         virtualObjectInteraction.selectedObject = nil
         
         let configuration = ARWorldTrackingConfiguration()
-        configuration.planeDetection = [.horizontal, .vertical]
+        configuration.planeDetection = [.horizontal]
         if #available(iOS 12.0, *) {
             configuration.environmentTexturing = .automatic
         }
