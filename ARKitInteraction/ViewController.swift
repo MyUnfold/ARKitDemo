@@ -112,7 +112,8 @@ class ViewController: UIViewController {
         if #available(iOS 12.0, *) {
             configuration.environmentTexturing = .automatic
         }
-        session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+        session.run(configuration, options: [])
+        //.removeExistingAnchors .resetTracking
 
         statusViewController.scheduleMessage("FIND A SURFACE TO PLACE AN OBJECT", inSeconds: 7.5, messageType: .planeEstimation)
     }
