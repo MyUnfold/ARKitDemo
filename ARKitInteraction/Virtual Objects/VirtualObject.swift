@@ -19,10 +19,6 @@ class VirtualObject: SCNNode {
 //    var modelName: String {
 //        return referenceURL.lastPathComponent.replacingOccurrences(of: ".scn", with: "")
 //    }
-    
-    /*
-     [<SCNNode: 0x282e6ba00 'frame_part1' pos(-0.489999 -0.000000 1.450000) scale(1.000000 1.000000 1.000000) | geometry=<SCNBox: 0x282b62140 'box' | width=0.020 height=0.025 length=1.000 chamferRadius=0.000> | no child>, <SCNNode: 0x282e61200 'picture' pos(0.000000 -0.000000 1.450000) rot(1.000000 0.000000 0.000000 1.570796) scale(1.000000 1.000000 1.000000) | geometry=<SCNPlane: 0x2829655f0 'plane' | width=1.000 height=1.000> | no child>, <SCNNode: 0x282e73300 'frame_part2' pos(0.490000 -0.000000 1.450000) scale(1.000000 1.000000 1.000000) | geometry=<SCNBox: 0x282b62140 'box' | width=0.020 height=0.025 length=1.000 chamferRadius=0.000> | no child>, <SCNNode: 0x282e71200 'frame_part3' pos(0.000000 -0.000000 0.960000) scale(1.000000 1.000000 1.000000) | geometry=<SCNBox: 0x282b61a40 'box' | width=1.000 height=0.025 length=0.025 chamferRadius=0.000> | no child>, <SCNNode: 0x282e73500 'frame_part4' pos(0.000000 -0.000000 1.950000) scale(1.000000 1.000000 1.000000) | geometry=<SCNBox: 0x282b61a40 'box' | width=1.000 height=0.025 length=0.025 chamferRadius=0.000> | no child>]
-     */
         
     private var audioUrl: String?
     
@@ -31,12 +27,6 @@ class VirtualObject: SCNNode {
         let childrenNodes = self.childNodes
         for child in childNodes {
             for subChilden in child.childNodes {
-                print(subChilden.name)
-//                if let text = subChilden as? SCNText {
-//                    text.isWrapped = true
-//                    text.containerFrame = CGRect.init(x: 0, y: 0, width: 200, height: 50)
-//                    text.string = text ?? ""
-//                }
                 if subChilden.name == "frame" {
                     let frameChildren = subChilden.childNodes
                     for c in frameChildren {
@@ -45,12 +35,21 @@ class VirtualObject: SCNNode {
                         }
                     }
                 }
+                if subChilden.name == "painting" {
+                    let frameChildren = subChilden.childNodes
+                    print (frameChildren)
+                    for c in frameChildren {
+
+                        if let text = c.geometry as? SCNText {
+                            text.isWrapped = true
+                            text.containerFrame = CGRect.init(x: 0, y: 0, width: 200, height: 50)
+                            text.string = "Hello world"//text ?? ""
+                        }
+                    }
+                }
             }
         }
     }
-    
-//    <SCNNode: 0x281dd8c00 | 3 children>
-//    [<SCNNode: 0x281dd9800 'box' pos(0.000000 0.500000 0.000000) scale(1.000000 1.000000 1.000000) | geometry=<SCNBox: 0x2818c6680 'box' | width=1.000 height=1.000 length=0.025 chamferRadius=0.000> | no child>, <SCNNode: 0x281dda100 'frame' pos(0.000000 0.050000 0.000000) rot(-1.000000 -0.000000 0.000000 1.570796) scale(1.000000 1.000000 1.000000) | 5 children>, <SCNNode: 0x281dd9900 'painting' | 1 child>]
     
     /// The alignments that are allowed for a virtual object.
     
