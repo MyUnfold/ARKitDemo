@@ -92,19 +92,21 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
     // - Tag: PlaceVirtualContent
     func virtualObjectSelectionViewController(_: VirtualObjectSelectionViewController, didSelectObject object: VirtualObject) {
         virtualObjectLoader.loadVirtualObject(object, loadedHandler: { [unowned self] loadedObject in
-            
-            do {
-                let scene = try SCNScene(url: object.referenceURL, options: nil)
-                self.sceneView.prepare([scene], completionHandler: { _ in
-                    DispatchQueue.main.async {
-                        self.hideObjectLoadingUI()
-                        self.placeVirtualObject(loadedObject)
-                    }
-                })
-            } catch {
-                fatalError("Failed to load SCNScene from object.referenceURL")
+//            do {
+//                let scene = try SCNScene(url: object.referenceURL, options: nil)
+//                self.sceneView.prepare([scene], completionHandler: { _ in
+//                    DispatchQueue.main.async {
+//                        self.hideObjectLoadingUI()
+//                        self.placeVirtualObject(loadedObject)
+//                    }
+//                })
+//            } catch {
+//                fatalError("Failed to load SCNScene from object.referenceURL")
+//            }
+            DispatchQueue.main.async {
+                self.hideObjectLoadingUI()
+                self.placeVirtualObject(object)
             }
-            
         })
         displayObjectLoadingUI()
     }

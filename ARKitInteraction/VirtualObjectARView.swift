@@ -52,8 +52,8 @@ extension ARSCNView {
     }
 
     // - Tag: GetRaycastQuery
-    func getRaycastQuery(for alignment: ARRaycastQuery.TargetAlignment = .any) -> ARRaycastQuery? {
-        return raycastQuery(from: screenCenter, allowing: .estimatedPlane, alignment: alignment)
+    func getRaycastQuery(for alignment: ARRaycastQuery.TargetAlignment = .horizontal) -> ARRaycastQuery? {
+        return raycastQuery(from: screenCenter, allowing: .existingPlaneInfinite, alignment: alignment)
     }
     
     var screenCenter: CGPoint {

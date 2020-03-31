@@ -75,15 +75,20 @@ extension ViewController: UIPopoverPresentationControllerDelegate {
               let segueIdentifer = SegueIdentifier(rawValue: identifier),
               segueIdentifer == .showObjects else { return }
         
+        let objects = VirtualObject.getObjects(forData: [VirtualObjectData.init(image: #imageLiteral(resourceName: "photo1"), text: "Mona Lisa", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"),
+        VirtualObjectData.init(image: #imageLiteral(resourceName: "photo3"), text: "Second Image", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"),
+        VirtualObjectData.init(image: #imageLiteral(resourceName: "photo5"), text: "Third Image", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"),
+        VirtualObjectData.init(image: #imageLiteral(resourceName: "photo2"), text: "Fourth Image", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"),
+        VirtualObjectData.init(image: #imageLiteral(resourceName: "photo4"), text: "Fifth Image", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3")])
         let objectsViewController = segue.destination as! VirtualObjectSelectionViewController
-        objectsViewController.virtualObjects = VirtualObject.availableObjects
+        objectsViewController.virtualObjects = objects
         objectsViewController.delegate = self
         objectsViewController.sceneView = sceneView
         self.objectsViewController = objectsViewController
         
         // Set all rows of currently placed objects to selected.
         for object in virtualObjectLoader.loadedObjects {
-            guard let index = VirtualObject.availableObjects.firstIndex(of: object) else { continue }
+            guard let index = objects.firstIndex(of: object) else { continue }
             objectsViewController.selectedVirtualObjectRows.insert(index)
         }
     }
