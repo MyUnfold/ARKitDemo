@@ -65,7 +65,7 @@ class ViewController: UIViewController {
         sceneView.session.delegate = self
         
         // Set up coaching overlay.
-//        setupCoachingOverlay()
+        setupCoachingOverlay()
 
         // Set up scene content.
         sceneView.scene.rootNode.addChildNode(focusSquare)
@@ -112,8 +112,7 @@ class ViewController: UIViewController {
         if #available(iOS 12.0, *) {
             configuration.environmentTexturing = .automatic
         }
-        session.run(configuration, options: [])
-        //.removeExistingAnchors .resetTracking
+        session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
 
         statusViewController.scheduleMessage("FIND A SURFACE TO PLACE AN OBJECT", inSeconds: 7.5, messageType: .planeEstimation)
     }

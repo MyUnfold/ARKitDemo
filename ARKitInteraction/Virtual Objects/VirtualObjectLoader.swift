@@ -52,7 +52,7 @@ class VirtualObjectLoader {
         // Remove the visual node from the scene graph.
         loadedObjects[index].removeFromParentNode()
         // Recoup resources allocated by the object.
-//        loadedObjects[index].unload()
+        loadedObjects[index].unload()
         loadedObjects.remove(at: index)
     }
 }

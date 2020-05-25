@@ -14,11 +14,17 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
      estimated by a hit test from the center of the screen.
      - Tag: PlaceVirtualObject */
     func placeVirtualObject(_ virtualObject: VirtualObject) {
-        guard focusSquare.state != .initializing, let query = virtualObject.raycastQuery else {
-            self.statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
-            if let controller = self.objectsViewController {
-                self.virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
-            }
+        
+        if let query = sceneView.getRaycastQuery(for: .horizontal),
+            let result = sceneView.castRay(for: query).first {
+            virtualObject.mostRecentInitialPlacementResult = result
+            virtualObject.raycastQuery = query
+        }
+        guard let query = virtualObject.raycastQuery else {
+//            self.statusViewController.showMessage("CANNOT PLACE OBJECT\nTry moving left or right.")
+//            if let controller = self.objectsViewController {
+//                self.virtualObjectSelectionViewController(controller, didDeselectObject: virtualObject)
+//            }
             return
         }
        
@@ -27,6 +33,7 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
         
         virtualObject.raycast = trackedRaycast
         virtualObjectInteraction.selectedObject = virtualObject
+        virtualObject.load()
         virtualObject.isHidden = false
     }
     
@@ -47,7 +54,7 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
             return
         }
         
-        if self.virtualObjectInteraction.trackedObject == virtualObject {
+        if virtualObject.allowedAlignment == .any && self.virtualObjectInteraction.trackedObject == virtualObject {
             
             // If an object that's aligned to a surface is being dragged, then
             // smoothen its orientation to avoid visible jumps, and apply only the translation directly.
@@ -92,21 +99,19 @@ extension ViewController: VirtualObjectSelectionViewControllerDelegate {
     // - Tag: PlaceVirtualContent
     func virtualObjectSelectionViewController(_: VirtualObjectSelectionViewController, didSelectObject object: VirtualObject) {
         virtualObjectLoader.loadVirtualObject(object, loadedHandler: { [unowned self] loadedObject in
-//            do {
-//                let scene = try SCNScene(url: object.referenceURL, options: nil)
-//                self.sceneView.prepare([scene], completionHandler: { _ in
-//                    DispatchQueue.main.async {
-//                        self.hideObjectLoadingUI()
-//                        self.placeVirtualObject(loadedObject)
-//                    }
-//                })
-//            } catch {
-//                fatalError("Failed to load SCNScene from object.referenceURL")
-//            }
-            DispatchQueue.main.async {
-                self.hideObjectLoadingUI()
-                self.placeVirtualObject(object)
+            
+            do {
+                let scene = try SCNScene(url: object.referenceURL, options: nil)
+                self.sceneView.prepare([scene], completionHandler: { _ in
+                    DispatchQueue.main.async {
+                        self.hideObjectLoadingUI()
+                        self.placeVirtualObject(loadedObject)
+                    }
+                })
+            } catch {
+                fatalError("Failed to load SCNScene from object.referenceURL")
             }
+            
         })
         displayObjectLoadingUI()
     }

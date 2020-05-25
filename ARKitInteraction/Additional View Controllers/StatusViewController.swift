@@ -117,7 +117,7 @@ class StatusViewController: UIViewController {
     
     // MARK: - IBActions
     
-    @IBAction private func restartExperience(_ sender: UIButton) {
+    @IBAction func restartExperience(_ sender: UIButton) {
         restartExperienceHandler()
     }
     

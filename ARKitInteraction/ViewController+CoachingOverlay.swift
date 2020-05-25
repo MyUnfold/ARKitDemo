@@ -9,6 +9,7 @@ import UIKit
 import ARKit
 
 /// - Tag: CoachingOverlayViewDelegate
+
 extension ViewController: ARCoachingOverlayViewDelegate {
     
     /// - Tag: HideUI
@@ -55,6 +56,6 @@ extension ViewController: ARCoachingOverlayViewDelegate {
 
     /// - Tag: CoachingGoal
     func setGoal() {
-        coachingOverlay.goal = .horizontalPlane
+        coachingOverlay.goal = .tracking
     }
 }

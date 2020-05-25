@@ -10,20 +10,20 @@ import ARKit
 
 // MARK: - ObjectCell
 
-class ObjectCell: UITableViewCell {
-    static let reuseIdentifier = "ObjectCell"
-    
-    @IBOutlet weak var objectTitleLabel: UILabel!
-    @IBOutlet weak var objectImageView: UIImageView!
-    @IBOutlet weak var vibrancyView: UIVisualEffectView!
-    
-    var modelName = "" {
-        didSet {
-            objectTitleLabel.text = modelName.capitalized
-            objectImageView.image = UIImage(named: modelName)
-        }
-    }
-}
+//class ObjectCell: UITableViewCell {
+//    static let reuseIdentifier = "ObjectCell"
+//
+//    @IBOutlet weak var objectTitleLabel: UILabel!
+//    @IBOutlet weak var objectImageView: UIImageView!
+//    @IBOutlet weak var vibrancyView: UIVisualEffectView!
+//
+//    var modelName = "" {
+//        didSet {
+//            objectTitleLabel.text = modelName.capitalized
+//            objectImageView.image = UIImage(named: modelName)
+//        }
+//    }
+//}
 
 // MARK: - VirtualObjectSelectionViewControllerDelegate
 
@@ -62,8 +62,14 @@ class VirtualObjectSelectionViewController: UICollectionViewController {
     }
     
     override func viewWillLayoutSubviews() {
-        preferredContentSize = CGSize(width: 300, height: 220)
+        preferredContentSize = CGSize(width: UIScreen.main.bounds.size.width, height: 220)
     }
+    
+    let virtualObjectData = [VirtualObjectData.init(image: #imageLiteral(resourceName: "photo1"), text: "Mona Lisa", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"),
+    VirtualObjectData.init(image: #imageLiteral(resourceName: "photo3"), text: "Second Image", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"),
+    VirtualObjectData.init(image: #imageLiteral(resourceName: "photo5"), text: "Third Image", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"),
+    VirtualObjectData.init(image: #imageLiteral(resourceName: "photo2"), text: "Fourth Image", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"),
+    VirtualObjectData.init(image: #imageLiteral(resourceName: "photo4"), text: "Fifth Image", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3")]
     
     func updateObjectAvailability() {
         guard let sceneView = sceneView else { return }
@@ -78,13 +84,10 @@ class VirtualObjectSelectionViewController: UICollectionViewController {
         }
                 
         var newEnabledVirtualObjectRows = Set<Int>()
-        let objects = VirtualObject.getObjects(forData: [VirtualObjectData.init(image: #imageLiteral(resourceName: "photo1"), text: "Mona Lisa", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"),
-        VirtualObjectData.init(image: #imageLiteral(resourceName: "photo3"), text: "Second Image", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"),
-        VirtualObjectData.init(image: #imageLiteral(resourceName: "photo5"), text: "Third Image", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"),
-        VirtualObjectData.init(image: #imageLiteral(resourceName: "photo2"), text: "Fourth Image", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"),
-        VirtualObjectData.init(image: #imageLiteral(resourceName: "photo4"), text: "Fifth Image", audioUrl: "https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3")])
+        
+        let objects = VirtualObject.getObjects(forData: virtualObjectData)
+        
         for (row, object) in objects.enumerated() {
-            print (object.childNodes)
             // Enable row always if item is already placed, in order to allow the user to remove it.
             if selectedVirtualObjectRows.contains(row) {
                 newEnabledVirtualObjectRows.insert(row)
@@ -131,9 +134,9 @@ class VirtualObjectSelectionViewController: UICollectionViewController {
     }
     
     override func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
-        let object = virtualObjects[indexPath.row]
-        delegate?.virtualObjectSelectionViewController(self, didDeselectObject: object)
-        dismiss(animated: true, completion: nil)
+//        let object = virtualObjects[indexPath.row]
+//        delegate?.virtualObjectSelectionViewController(self, didDeselectObject: object)
+//        dismiss(animated: true, completion: nil)
     }
         
     // MARK: - UITableViewDataSource
@@ -145,7 +148,7 @@ class VirtualObjectSelectionViewController: UICollectionViewController {
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ExhibitionCollectionViewCell", for: indexPath) as! ExhibitionCollectionViewCell
         cell.removeImage.isHidden = true
-        cell.galleryThumbnail.image = #imageLiteral(resourceName: "photo1")
+        cell.galleryThumbnail.image = virtualObjectData[indexPath.item].image
         
 //        if selectedVirtualObjectRows.contains(indexPath.row) {
             cell.removeImage.isHidden = false

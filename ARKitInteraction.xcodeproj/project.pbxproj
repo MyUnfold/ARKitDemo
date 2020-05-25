@@ -29,6 +29,8 @@
 		E187105E2253C46A003B54DA /* ViewController+CoachingOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = E187105D2253C46A003B54DA /* ViewController+CoachingOverlay.swift */; };
 		ED46BF932431F070006FA846 /* ExhibitionCollectionViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = ED46BF912431F070006FA846 /* ExhibitionCollectionViewCell.xib */; };
 		ED46BF942431F070006FA846 /* ExhibitionCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED46BF922431F070006FA846 /* ExhibitionCollectionViewCell.swift */; };
+		ED693C11247BFA3A0089D4A3 /* GoParkViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED693C10247BFA390089D4A3 /* GoParkViewController.swift */; };
+		ED693C13247BFA450089D4A3 /* GoParkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED693C12247BFA450089D4A3 /* GoParkManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -59,6 +61,8 @@
 		E187105D2253C46A003B54DA /* ViewController+CoachingOverlay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ViewController+CoachingOverlay.swift"; sourceTree = "<group>"; };
 		ED46BF912431F070006FA846 /* ExhibitionCollectionViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ExhibitionCollectionViewCell.xib; sourceTree = "<group>"; };
 		ED46BF922431F070006FA846 /* ExhibitionCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExhibitionCollectionViewCell.swift; sourceTree = "<group>"; };
+		ED693C10247BFA390089D4A3 /* GoParkViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoParkViewController.swift; sourceTree = "<group>"; };
+		ED693C12247BFA450089D4A3 /* GoParkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoParkManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,6 +117,8 @@
 		3929C47F1E89EC2C00E00B60 = {
 			isa = PBXGroup;
 			children = (
+				ED693C10247BFA390089D4A3 /* GoParkViewController.swift */,
+				ED693C12247BFA450089D4A3 /* GoParkManager.swift */,
 				11063F3B1EBE651B0033EE6D /* README.md */,
 				3929C48A1E89EC2C00E00B60 /* ARKitInteraction */,
 				3929C4891E89EC2C00E00B60 /* Products */,
@@ -263,12 +269,14 @@
 				ED46BF942431F070006FA846 /* ExhibitionCollectionViewCell.swift in Sources */,
 				E187105E2253C46A003B54DA /* ViewController+CoachingOverlay.swift in Sources */,
 				C8C12A711F29277B00B011FE /* ViewController+ARSCNViewDelegate.swift in Sources */,
+				ED693C13247BFA450089D4A3 /* GoParkManager.swift in Sources */,
 				C8C2AC521F3A545C00E86BA3 /* VirtualObjectInteraction.swift in Sources */,
 				C46356671EF9CC500080C8D9 /* VirtualObjectARView.swift in Sources */,
 				148832411EFC3B250043E0AB /* FocusSquareSegment.swift in Sources */,
 				C8D71A001F3B7D3D0086AD64 /* VirtualObject.swift in Sources */,
 				C42A71BD1E9C0AF200944367 /* FocusSquare.swift in Sources */,
 				3929C48C1E89EC2C00E00B60 /* AppDelegate.swift in Sources */,
+				ED693C11247BFA3A0089D4A3 /* GoParkViewController.swift in Sources */,
 				C46356681EF9CC530080C8D9 /* VirtualObjectLoader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
