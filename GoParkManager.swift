@@ -84,6 +84,7 @@ class ARPlaceMenthelper {
             var nodes: [SCNNode] = []
             for i in 0 ..< self.numberOfImages {
                 if let node = ObjectLoaderHelper.getNode() {
+                    node.name = "\(i)"
                     let theta = CGFloat(i) * angularPlacement
                     node.position = SCNVector3.init(radius * cos(theta), 0, radius * sin(theta))
                     var rotationAngle = theta
