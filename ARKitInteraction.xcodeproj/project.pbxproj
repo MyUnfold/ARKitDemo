@@ -34,6 +34,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0C4EB80C3D099341BCBE5071 /* Pods-ARKitInteraction.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ARKitInteraction.release.xcconfig"; path = "Target Support Files/Pods-ARKitInteraction/Pods-ARKitInteraction.release.xcconfig"; sourceTree = "<group>"; };
 		11063F3B1EBE651B0033EE6D /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		147062631F06FA790003EE03 /* VirtualObjectSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualObjectSelection.swift; sourceTree = "<group>"; };
 		147D76491EFC36070000FEBF /* ViewController+ObjectSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+ObjectSelection.swift"; sourceTree = "<group>"; };
@@ -48,6 +49,7 @@
 		3929C49E1E89EE4400E00B60 /* Models.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = Models.scnassets; sourceTree = "<group>"; };
 		39C0B9581E9C6B1F003FCA0C /* Utilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		39D8DC1A1E8ADAE600386B05 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		9397645D78394CF9537B3E24 /* Pods_ARKitInteraction.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ARKitInteraction.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAD9C500BAD9C3C000000001 /* SampleCode.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = SampleCode.xcconfig; path = Configuration/SampleCode.xcconfig; sourceTree = "<group>"; };
 		BD618B80BD61850000000001 /* LICENSE.txt */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		C41366B81EB80DD400EC054A /* StatusViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusViewController.swift; sourceTree = "<group>"; };
@@ -59,6 +61,7 @@
 		C8C2AC511F3A545C00E86BA3 /* VirtualObjectInteraction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualObjectInteraction.swift; sourceTree = "<group>"; };
 		C8D719FF1F3B7D3D0086AD64 /* VirtualObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VirtualObject.swift; sourceTree = "<group>"; };
 		E187105D2253C46A003B54DA /* ViewController+CoachingOverlay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ViewController+CoachingOverlay.swift"; sourceTree = "<group>"; };
+		E38CD2BC2C1C72EB5541AB75 /* Pods-ARKitInteraction.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ARKitInteraction.debug.xcconfig"; path = "Target Support Files/Pods-ARKitInteraction/Pods-ARKitInteraction.debug.xcconfig"; sourceTree = "<group>"; };
 		ED46BF912431F070006FA846 /* ExhibitionCollectionViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ExhibitionCollectionViewCell.xib; sourceTree = "<group>"; };
 		ED46BF922431F070006FA846 /* ExhibitionCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExhibitionCollectionViewCell.swift; sourceTree = "<group>"; };
 		ED693C10247BFA390089D4A3 /* GoParkViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoParkViewController.swift; sourceTree = "<group>"; };
@@ -76,6 +79,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0704284F91C142732A85BF53 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				E38CD2BC2C1C72EB5541AB75 /* Pods-ARKitInteraction.debug.xcconfig */,
+				0C4EB80C3D099341BCBE5071 /* Pods-ARKitInteraction.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		113B64D01ECA81CA0071CBD1 /* Focus Square */ = {
 			isa = PBXGroup;
 			children = (
@@ -124,6 +136,8 @@
 				3929C4891E89EC2C00E00B60 /* Products */,
 				BAD9CC80BAD9CB3000000001 /* Configuration */,
 				BD617E70BD61816000000001 /* LICENSE */,
+				0704284F91C142732A85BF53 /* Pods */,
+				BBCEF6FF0FE02A71F659FC94 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -164,6 +178,14 @@
 				BAD9C500BAD9C3C000000001 /* SampleCode.xcconfig */,
 			);
 			name = Configuration;
+			sourceTree = "<group>";
+		};
+		BBCEF6FF0FE02A71F659FC94 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				9397645D78394CF9537B3E24 /* Pods_ARKitInteraction.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		BD617E70BD61816000000001 /* LICENSE */ = {
@@ -429,6 +451,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -450,6 +473,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
