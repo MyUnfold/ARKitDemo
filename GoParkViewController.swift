@@ -22,6 +22,10 @@ class GoParkViewController: UIViewController, ARCoachingOverlayViewDelegate {
     
     private let webView = WKWebView(frame: .zero)
     
+    var length : CGFloat = 0.0
+    var width : CGFloat = 0.0
+    var numberOfImages : CGFloat = 0.0
+    
     // Edge case for 3
     
     private func registerGestureRecognizer() {
@@ -74,7 +78,7 @@ class GoParkViewController: UIViewController, ARCoachingOverlayViewDelegate {
         registerGestureRecognizer()
         let configuration = ARWorldTrackingConfiguration()
         self.sceneView.session.run(configuration)
-        let arHelper = ARPlaceMenthelper.init(numberOfImages: 4, length: 3, width: 5, configuration: PlacementConfiguration.center.rawValue)
+        let arHelper = ARPlaceMenthelper.init(numberOfImages: Int(numberOfImages), length: Float(length), width: Float(width), configuration: PlacementConfiguration.center.rawValue)
         placeObjects.isEnabled = false
         arHelper.getObjectsForConfigurations { (nodes) in
             DispatchQueue.main.async {
