@@ -10,13 +10,11 @@ import UIKit
 import ARKit
 import WebKit
 
-class GoParkViewController: UIViewController, ARCoachingOverlayViewDelegate {
+class GoParkViewController: UIViewController {
     
     @IBOutlet weak var placeObjects: UIButton!
     
     @IBOutlet weak var sceneView: ARSCNView!
-    
-    let coachingOverlay = ARCoachingOverlayView()
     
     @IBAction func goBack(_ sender: UIButton) {
         self.navigationController?.popViewController(animated: true)
@@ -63,6 +61,7 @@ class GoParkViewController: UIViewController, ARCoachingOverlayViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        UIApplication.shared.isIdleTimerDisabled = true
         self.webView.isHidden = true
         webView.translatesAutoresizingMaskIntoConstraints = false
         self.view.addSubview(self.webView)
@@ -73,8 +72,6 @@ class GoParkViewController: UIViewController, ARCoachingOverlayViewDelegate {
             self.webView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
             self.webView.topAnchor.constraint(equalTo: self.view.topAnchor),
         ])
-        // For constant height use the below constraint and set your height constant and remove either top or bottom constraint
-        //self.webView.heightAnchor.constraint(equalToConstant: 200.0),
         
         self.view.setNeedsLayout()
         let request = URLRequest(url: URL.init(string: "https://www.google.com")!)
@@ -82,6 +79,8 @@ class GoParkViewController: UIViewController, ARCoachingOverlayViewDelegate {
         
         registerGestureRecognizer()
         let configuration = ARWorldTrackingConfiguration()
+        configuration.isAutoFocusEnabled = false
+        sceneView.session.delegate = self
         self.sceneView.session.run(configuration)
         
         let arHelper = ARPlaceMenthelper.init(numberOfImages: Int(numberOfImages), length: Float(length), width: Float(width), configuration: configurationPicked)
@@ -101,7 +100,6 @@ class GoParkViewController: UIViewController, ARCoachingOverlayViewDelegate {
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         self.sceneView.session.pause()
-        
     }
     
     @IBAction func placeObjects(_ sender: UIButton) {
@@ -120,47 +118,15 @@ class GoParkViewController: UIViewController, ARCoachingOverlayViewDelegate {
             }
         }
     }
-    
-    //    func setupCoachingOverlay() {
-    //        // Set up coaching view
-    //        coachingOverlay.session = sceneView.session
-    //        coachingOverlay.delegate = self
-    //
-    //        coachingOverlay.translatesAutoresizingMaskIntoConstraints = false
-    //        sceneView.addSubview(coachingOverlay)
-    //
-    //        NSLayoutConstraint.activate([
-    //            coachingOverlay.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-    //            coachingOverlay.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-    //            coachingOverlay.widthAnchor.constraint(equalTo: view.widthAnchor),
-    //            coachingOverlay.heightAnchor.constraint(equalTo: view.heightAnchor)
-    //            ])
-    //
-    //        setActivatesAutomatically()
-    //        coachingOverlay.isHidden = false
-    //        // Most of the virtual objects in this sample require a horizontal surface,
-    //        // therefore coach the user to find a horizontal plane.
-    //        setGoal()
-    //    }
-    
-    //    func setActivatesAutomatically() {
-    //        coachingOverlay.activatesAutomatically = true
-    //    }
-    //
-    //    /// - Tag: CoachingGoal
-    //    func setGoal() {
-    //        coachingOverlay.goal = .horizontalPlane
-    //    }
-    //
-    //    func coachingOverlayViewWillActivate(_ coachingOverlayView: ARCoachingOverlayView) {
-    //        placeObjects.isHidden = true
-    //    }
-    //
-    //    /// - Tag: PresentUI
-    //    func coachingOverlayViewDidDeactivate(_ coachingOverlayView: ARCoachingOverlayView) {
-    //        coachingOverlay.isHidden = true
-    //        placeObjects.isHidden = false
-    //    }
-    
-    
+}
+
+
+extension GoParkViewController: ARSessionDelegate {
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        if frame.camera.trackingState.recommendation == "TRACKING LIMITED" {
+            let configuration = ARWorldTrackingConfiguration()
+            configuration.isAutoFocusEnabled = false
+            self.sceneView.session.run(configuration)
+        }
+    }
 }

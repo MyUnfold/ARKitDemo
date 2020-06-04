@@ -25,7 +25,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 determine whether to show UI for launching AR experiences.
             """) // For details, see https://developer.apple.com/documentation/arkit
         }
-
         return true
     }
     
