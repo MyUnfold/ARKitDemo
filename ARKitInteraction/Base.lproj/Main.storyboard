@@ -121,11 +121,20 @@
                                     <action selector="placeObjects:" destination="mJh-EQ-EGO" eventType="touchUpInside" id="zBj-uo-A2j"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="02K-74-Wpk">
+                                <rect key="frame" x="0.0" y="0.0" width="58" height="30"/>
+                                <state key="normal" title="Go Back"/>
+                                <connections>
+                                    <action selector="goBack:" destination="mJh-EQ-EGO" eventType="touchUpInside" id="s9O-3W-S2v"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
+                            <constraint firstItem="02K-74-Wpk" firstAttribute="leading" secondItem="S0u-qw-nxK" secondAttribute="leading" id="Bws-is-qGM"/>
                             <constraint firstItem="hwg-H6-JaR" firstAttribute="top" secondItem="a7N-c9-FP3" secondAttribute="top" id="DOh-lO-YjH"/>
                             <constraint firstItem="DDh-N3-fVl" firstAttribute="centerX" secondItem="hwg-H6-JaR" secondAttribute="centerX" id="Ocw-IT-yG1"/>
+                            <constraint firstItem="02K-74-Wpk" firstAttribute="top" secondItem="S0u-qw-nxK" secondAttribute="top" id="PU8-bo-Ovh"/>
                             <constraint firstItem="DDh-N3-fVl" firstAttribute="centerY" secondItem="hwg-H6-JaR" secondAttribute="centerY" id="STb-kH-moU"/>
                             <constraint firstAttribute="bottom" secondItem="hwg-H6-JaR" secondAttribute="bottom" id="hhm-8J-kUP"/>
                             <constraint firstItem="hwg-H6-JaR" firstAttribute="leading" secondItem="S0u-qw-nxK" secondAttribute="leading" id="mgL-mr-ant"/>
@@ -160,17 +169,17 @@
                                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="ULm-uC-3bu">
                                                 <rect key="frame" x="0.0" y="0.0" width="320" height="118"/>
                                                 <subviews>
-                                                    <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Enter Length (Area)" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="7Nt-DK-5qN">
+                                                    <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="4" borderStyle="roundedRect" placeholder="Enter Length (Area)" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="7Nt-DK-5qN">
                                                         <rect key="frame" x="0.0" y="0.0" width="320" height="34"/>
                                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                         <textInputTraits key="textInputTraits" keyboardType="numberPad" enablesReturnKeyAutomatically="YES"/>
                                                     </textField>
-                                                    <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Enter Width (Area)" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Agl-CF-ukl">
+                                                    <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="4" borderStyle="roundedRect" placeholder="Enter Width (Area)" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Agl-CF-ukl">
                                                         <rect key="frame" x="0.0" y="42" width="320" height="34"/>
                                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                         <textInputTraits key="textInputTraits" keyboardType="numberPad" enablesReturnKeyAutomatically="YES"/>
                                                     </textField>
-                                                    <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Enter Number Of Images" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="TEv-Gt-RxO">
+                                                    <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="5" borderStyle="roundedRect" placeholder="Enter Number Of Images" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="TEv-Gt-RxO">
                                                         <rect key="frame" x="0.0" y="84" width="320" height="34"/>
                                                         <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                         <textInputTraits key="textInputTraits" keyboardType="numberPad" enablesReturnKeyAutomatically="YES"/>
@@ -188,13 +197,21 @@
                                                     <action selector="pushToNext:" destination="CoV-95-diF" eventType="touchUpInside" id="BBt-fr-PiO"/>
                                                 </connections>
                                             </button>
+                                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="lbb-qa-c5d">
+                                                <rect key="frame" x="0.0" y="186" width="320" height="34"/>
+                                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                                <textInputTraits key="textInputTraits"/>
+                                            </textField>
                                         </subviews>
                                         <color key="backgroundColor" systemColor="systemOrangeColor" red="1" green="0.58431372550000005" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                         <constraints>
                                             <constraint firstItem="kDA-IZ-krj" firstAttribute="top" secondItem="ULm-uC-3bu" secondAttribute="bottom" id="8Z2-0g-grN"/>
+                                            <constraint firstItem="lbb-qa-c5d" firstAttribute="top" secondItem="kDA-IZ-krj" secondAttribute="bottom" constant="20" id="JZm-Ea-cca"/>
                                             <constraint firstAttribute="trailing" secondItem="kDA-IZ-krj" secondAttribute="trailing" id="Tqp-Jm-i1C"/>
+                                            <constraint firstAttribute="trailing" secondItem="lbb-qa-c5d" secondAttribute="trailing" id="Z5X-xl-gAQ"/>
                                             <constraint firstItem="ULm-uC-3bu" firstAttribute="leading" secondItem="0wA-1v-o11" secondAttribute="leading" id="o2r-Xy-Qp9"/>
                                             <constraint firstAttribute="trailing" secondItem="ULm-uC-3bu" secondAttribute="trailing" id="qoT-QE-FWs"/>
+                                            <constraint firstItem="lbb-qa-c5d" firstAttribute="leading" secondItem="0wA-1v-o11" secondAttribute="leading" id="rxB-Pa-ALA"/>
                                             <constraint firstItem="ULm-uC-3bu" firstAttribute="top" secondItem="0wA-1v-o11" secondAttribute="top" id="uc4-Ry-bXi"/>
                                             <constraint firstItem="kDA-IZ-krj" firstAttribute="leading" secondItem="0wA-1v-o11" secondAttribute="leading" id="uo3-DQ-EiZ"/>
                                         </constraints>
@@ -223,6 +240,7 @@
                     </view>
                     <navigationItem key="navigationItem" id="2Ka-NZ-lRG"/>
                     <connections>
+                        <outlet property="configurationTextField" destination="lbb-qa-c5d" id="KoZ-Pu-xFf"/>
                         <outlet property="lengthTextField" destination="7Nt-DK-5qN" id="UyF-yV-mcj"/>
                         <outlet property="numberOfItemsTextField" destination="TEv-Gt-RxO" id="wHN-za-uOh"/>
                         <outlet property="widthTextField" destination="Agl-CF-ukl" id="WIz-AC-xbV"/>
@@ -231,7 +249,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="gPf-FV-ZxT" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-751" y="141"/>
+            <point key="canvasLocation" x="-751.875" y="140.49295774647888"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="sA2-9C-0RF">

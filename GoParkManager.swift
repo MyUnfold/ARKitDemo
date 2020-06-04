@@ -14,7 +14,6 @@ let pie = CGFloat.pi
 
 enum PlacementConfiguration : Int {
     
-    
     case center = 0, corner0Quarter, corner1Quarter, corner2Quarter, corner3Quarter, side0Center, side1Center, side2Center, side3Center
     
     func isQuarterConfiguration() -> Bool {
@@ -42,14 +41,13 @@ class ARPlaceMenthelper {
     var width: Float = 0.0
     var configuration = PlacementConfiguration.center
     
-    let colors = [UIColor.red, UIColor.green, UIColor.blue, UIColor.black, UIColor.gray, UIColor.white]    
+//    let colors = [UIColor.red, UIColor.green, UIColor.blue, UIColor.black, UIColor.gray, UIColor.white]
     
     init(numberOfImages:Int, length: Float, width: Float, configuration: Int) {
         self.numberOfImages = numberOfImages
         self.length = length
         self.width = width
         self.configuration = PlacementConfiguration.init(rawValue: configuration) ?? PlacementConfiguration.center
-        
     }
     
     func getRadius() -> CGFloat {
@@ -61,9 +59,6 @@ class ARPlaceMenthelper {
         } else if configuration.isLineConfiguration() {
             return CGFloat(smallerSide)
         }
-        print (length)
-        print (width)
-        print (smallerSide)
         return CGFloat(smallerSide)
     }
     
@@ -79,32 +74,55 @@ class ARPlaceMenthelper {
     
     func getObjectsForConfigurations(loadedHandler: @escaping ([SCNNode]) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
+            var nodes: [SCNNode] = []
             let radius = self.getRadius()
             let angularPlacement = CGFloat(self.getAngualarPlacementAngle())
-            var nodes: [SCNNode] = []
+            var startingAngle : CGFloat = 0
+            
+            if self.configuration == .center {
+                startingAngle = 0
+            } else if self.configuration.isQuarterConfiguration() {
+                if self.configuration == .corner0Quarter {
+                    startingAngle = 3 * pie / 2
+                }else if self.configuration == .corner2Quarter {
+                    startingAngle = 3 * pie / 2
+//                    startingAngle = pie / 2
+                } else if self.configuration == .corner1Quarter {
+//                    startingAngle = 3 * pie / 2
+                    startingAngle = pie
+                } else if self.configuration == .corner3Quarter {
+//                    startingAngle = 3 * pie / 2
+                    startingAngle = pie
+                }
+            } else if self.configuration.isLineConfiguration() {
+                if self.configuration == .side0Center {
+                    startingAngle = pie
+                } else if self.configuration == .side1Center {
+                    startingAngle = pie
+                } else if self.configuration == .side2Center {
+                    startingAngle = pie
+                } else if self.configuration == .side3Center {
+                    startingAngle = pie
+                }
+            }
             for i in 0 ..< self.numberOfImages {
                 if let node = ObjectLoaderHelper.getNode() {
+                    let backgroundNode = node.childNode(withName: "picture", recursively: true)
                     node.name = "\(i)"
-                    let theta = CGFloat(i) * angularPlacement
+                    let theta = startingAngle + CGFloat(i) * angularPlacement
                     node.position = SCNVector3.init(radius * cos(theta), 0, radius * sin(theta))
                     var rotationAngle = theta
-//                    let pictureNode = node.childNode(withName: "picture", recursively: true)
                     if (theta >= 0 && theta <= pie / 2) {
                         rotationAngle = pie / 2 - rotationAngle
-//                        pictureNode?.geometry?.firstMaterial?.diffuse.contents = self.colors[0]
-//                        print ("RED")
                     } else if (theta >= pie / 2 && theta < pie) {
-//                        pictureNode?.geometry?.firstMaterial?.diffuse.contents = self.colors[1]
                         rotationAngle = -rotationAngle + .pi / 2
-//                        print ("GREEN")
                     } else if (theta >= pie && theta < 3 * pie / 2) {
-//                        pictureNode?.geometry?.firstMaterial?.diffuse.contents = self.colors[2]
-                        rotationAngle = -rotationAngle + 3 * pie / 2
-//                        print ("BLUE")
+                        rotationAngle = -rotationAngle + (3 * pie / 2 + pie)
                     } else if (theta >= 3 * pie / 2 && theta < 2 * pie) {
-//                        pictureNode?.geometry?.firstMaterial?.diffuse.contents = self.colors[3]
-                        rotationAngle = -rotationAngle + (3 * pie / 2)
-//                        print ("GREEN")
+                        rotationAngle = -rotationAngle + (3 * pie / 2 + pie)
+                    }
+                    if i == 0 {
+                        backgroundNode?.geometry?.firstMaterial?.diffuse.contents = UIColor.black
                     }
                     node.eulerAngles.y = Float(rotationAngle)
                     nodes.append(node)

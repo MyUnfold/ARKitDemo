@@ -18,6 +18,10 @@ class GoParkViewController: UIViewController, ARCoachingOverlayViewDelegate {
     
     let coachingOverlay = ARCoachingOverlayView()
     
+    @IBAction func goBack(_ sender: UIButton) {
+        self.navigationController?.popViewController(animated: true)
+    }
+    
     private var nodes: [SCNNode] = []
     
     private let webView = WKWebView(frame: .zero)
@@ -25,6 +29,7 @@ class GoParkViewController: UIViewController, ARCoachingOverlayViewDelegate {
     var length : CGFloat = 0.0
     var width : CGFloat = 0.0
     var numberOfImages : CGFloat = 0.0
+    var configurationPicked = 0
     
     // Edge case for 3
     
@@ -78,7 +83,8 @@ class GoParkViewController: UIViewController, ARCoachingOverlayViewDelegate {
         registerGestureRecognizer()
         let configuration = ARWorldTrackingConfiguration()
         self.sceneView.session.run(configuration)
-        let arHelper = ARPlaceMenthelper.init(numberOfImages: Int(numberOfImages), length: Float(length), width: Float(width), configuration: PlacementConfiguration.center.rawValue)
+        
+        let arHelper = ARPlaceMenthelper.init(numberOfImages: Int(numberOfImages), length: Float(length), width: Float(width), configuration: configurationPicked)
         placeObjects.isEnabled = false
         arHelper.getObjectsForConfigurations { (nodes) in
             DispatchQueue.main.async {
@@ -105,7 +111,6 @@ class GoParkViewController: UIViewController, ARCoachingOverlayViewDelegate {
                 pictureNode?.name = "\(index)"
                 pictureNode?.geometry?.firstMaterial?.diffuse.contents = #imageLiteral(resourceName: "photo3")
             }
-            print ("Load Images now")
         } else {
             DispatchQueue.main.async {
                 for nNode in self.nodes {
