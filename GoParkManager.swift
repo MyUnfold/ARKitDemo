@@ -47,7 +47,13 @@ class ARPlaceMenthelper {
         self.numberOfImages = numberOfImages
         self.length = length
         self.width = width
-        self.configuration = PlacementConfiguration.init(rawValue: configuration) ?? PlacementConfiguration.center
+        if configuration == 0 {
+           self.configuration = PlacementConfiguration.init(rawValue: 0) ?? PlacementConfiguration.center
+        } else if configuration == 1 {
+            self.configuration = PlacementConfiguration.init(rawValue: 1) ?? PlacementConfiguration.center
+        } else if configuration == 2  {
+            self.configuration = PlacementConfiguration.init(rawValue: 5) ?? PlacementConfiguration.center
+        }
     }
     
     func getRadius() -> CGFloat {

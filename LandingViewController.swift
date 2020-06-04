@@ -17,7 +17,8 @@ class LandingViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var configurationTextField: UITextField!
     private let pickerView = UIPickerView()
     
-    private let configurations = ["Center", "Corner 0", "Corner 1", "Corner 2", "Corner 3", "Side 0", "Side 1", "Side 2", "Side 3"]
+    // ["Center", "Corner 0", "Corner 1", "Corner 2", "Corner 3", "Side 0", "Side 1", "Side 2", "Side 3"]
+    private let configurations = ["Center", "Corner", "Side"]
     
     var length : CGFloat = 0.0
     var width : CGFloat = 0.0
