@@ -82,6 +82,8 @@ class LandingViewController: UIViewController, UITextFieldDelegate {
         }
         
         if let destination = segue.destination as? GoParkViewController {
+//            destination.length = self.numberOfImages * 1.1 / pie
+//            destination.width = self.numberOfImages * 1.1 / pie
             destination.length = self.length
             destination.width = self.width
             destination.numberOfImages = self.numberOfImages

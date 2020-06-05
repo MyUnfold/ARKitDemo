@@ -84,7 +84,8 @@ class ARPlaceMenthelper {
             let radius = self.getRadius()
             let angularPlacement = CGFloat(self.getAngualarPlacementAngle())
             var startingAngle : CGFloat = 0
-            
+            let scale = Float(self.getScaleMultiplier())
+            print (scale)
             if self.configuration == .center {
                 startingAngle = 0
             } else if self.configuration.isQuarterConfiguration() {
@@ -131,12 +132,31 @@ class ARPlaceMenthelper {
                         backgroundNode?.geometry?.firstMaterial?.diffuse.contents = UIColor.black
                     }
                     node.eulerAngles.y = Float(rotationAngle)
+                    node.scale = SCNVector3(x: scale, y: scale, z: scale)
                     nodes.append(node)
                 }
             }
             loadedHandler(nodes)
         }
     }
+    
+    private func getCircumference() -> CGFloat {
+        var multiplier: CGFloat = 0
+        if self.configuration.isLineConfiguration() {
+            multiplier = 1
+        } else if self.configuration.isQuarterConfiguration() {
+            multiplier = 0.5
+        } else {
+            multiplier = 2
+        }
+        return (multiplier * pie * self.getRadius())
+    }
+    
+    private func getScaleMultiplier() -> CGFloat {
+        let scale: CGFloat = getCircumference() / (1.5 * CGFloat(self.numberOfImages))
+        return scale
+    }
+    
 }
 
 class ObjectLoaderHelper {
