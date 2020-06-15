@@ -19,6 +19,10 @@ class DetailsViewController: UIViewController {
         performSegue(withIdentifier: "loadSingleImageinAR", sender: nil)
     }
     
+    @IBAction func goBackTapped(_ sender: UIButton) {
+        self.navigationController?.popViewController(animated: true)
+    }
+    
     @IBOutlet weak var widthTextField: UITextField!
     @IBOutlet weak var heightTextField: UITextField!
     
@@ -35,17 +39,13 @@ class DetailsViewController: UIViewController {
             self.addChild(controller)
             
             let videoFrame = descriptionView.bounds
-//            controller.view.frame = videoFrame
+            controller.view.frame = videoFrame
             descriptionView.addSubview(controller.view)
             // till here
             
             player?.play()
         } catch {
         }
-    }
-    
-    @IBAction func goBackTapped(_ sender: UIButton) {
-        self.navigationController?.popViewController(animated: true)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {

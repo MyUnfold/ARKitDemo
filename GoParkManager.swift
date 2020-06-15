@@ -50,20 +50,6 @@ class ARPlaceMenthelper {
         DispatchQueue.global(qos: .userInitiated).sync {
             if let node = ObjectLoaderHelper.getNode() {
                 node.position = SCNVector3.init(1.0, 0, 1.0)
-//                var rotationAngle = theta
-//                if (theta >= 0 && theta <= pie / 2) {
-//                    rotationAngle = pie / 2 - rotationAngle
-//                } else if (theta >= pie / 2 && theta < pie) {
-//                    rotationAngle = -rotationAngle + .pi / 2
-//                } else if (theta >= pie && theta < 3 * pie / 2) {
-//                    rotationAngle = -rotationAngle + (3 * pie / 2 + pie)
-//                } else if (theta >= 3 * pie / 2 && theta < 2 * pie) {
-//                    rotationAngle = -rotationAngle + (3 * pie / 2 + pie)
-//                }
-//                backgroundNode?.geometry?.firstMaterial?.diffuse.contents = UIColor.purple
-//                node.eulerAngles.y = Float(rotationAngle)
-//                node.scale = SCNVector3(x: scale, y: scale, z: scale)
-//                nodes.append(node)
                 loaded(node)
             }
         }
@@ -112,7 +98,7 @@ class ARPlaceMenthelper {
     }
     
     @discardableResult func getObjectsForConfigurations(pageNumber: Int, loadedHandler: @escaping ([SCNNode]) -> Void) -> Bool {
-        print (self.numberOfPages)
+        print (pageNumber)
         if !(pageNumber >= 0 && pageNumber <= self.numberOfPages) {
             return false
         }

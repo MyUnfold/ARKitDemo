@@ -20,7 +20,7 @@ class GoParkViewController: UIViewController {
     }
     
     private var nodes: [SCNNode] = []
-        
+    
     private let configuration = ARWorldTrackingConfiguration.init()
     
     var length : CGFloat = 0.0
@@ -39,18 +39,13 @@ class GoParkViewController: UIViewController {
         let sceneView = sender.view as! ARSCNView
         let location = sender.location(in: sceneView)
         let results = sceneView.hitTest(location, options: [SCNHitTestOption.searchMode : 1,
-        SCNHitTestOption.ignoreChildNodes : false])
+                                                            SCNHitTestOption.ignoreChildNodes : false])
         
-        selectedNode = results.first?.node
-        performSegue(withIdentifier: "showDetails", sender: nil)
-        
-//        for result in results.filter( { $0.node.name != nil }) {
-//
-//        }
-        
+        if results.filter( { $0.node.name != nil }).count != 0 {
+            performSegue(withIdentifier: "showDetails", sender: nil)
+        }
     }
     
-    private var selectedNode: SCNNode?
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let destinationVC = segue.destination as? DetailsViewController {
@@ -109,9 +104,10 @@ class GoParkViewController: UIViewController {
             DispatchQueue.main.async {
                 self.placeObjects.isEnabled = true
                 self.nodes = nodes
-                for nNode in self.nodes {
-                    self.sceneView.scene.rootNode.addChildNode(nNode)
+                for noteToDelete in self.nodes {
+                    noteToDelete.removeFromParentNode()
                 }
+                
             }
         })) ?? false) {
             self.selectedPageNumber += 1
@@ -119,13 +115,13 @@ class GoParkViewController: UIViewController {
     }
     
     @IBAction func loadPreviousImages(_ sender: UIButton) {
+        for noteToDelete in self.nodes {
+            noteToDelete.removeFromParentNode()
+        }
         if ((self.arHelper?.getObjectsForConfigurations(pageNumber: selectedPageNumber - 1, loadedHandler: { nodes in
             DispatchQueue.main.async {
                 self.placeObjects.isEnabled = true
                 self.nodes = nodes
-                for nNode in self.nodes {
-                    self.sceneView.scene.rootNode.addChildNode(nNode)
-                }
             }
         })) ?? false) {
             self.selectedPageNumber -= 1
