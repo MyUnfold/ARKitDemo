@@ -8,7 +8,6 @@
 
 import UIKit
 import ARKit
-import WebKit
 
 class GoParkViewController: UIViewController {
     
@@ -21,8 +20,8 @@ class GoParkViewController: UIViewController {
     }
     
     private var nodes: [SCNNode] = []
-    
-    private let webView = WKWebView(frame: .zero)
+        
+    private let configuration = ARWorldTrackingConfiguration.init()
     
     var length : CGFloat = 0.0
     var width : CGFloat = 0.0
@@ -42,55 +41,43 @@ class GoParkViewController: UIViewController {
         let results = sceneView.hitTest(location, options: [SCNHitTestOption.searchMode : 1,
         SCNHitTestOption.ignoreChildNodes : false])
         
-//        guard sender.state == .began else { return }
-        for result in results.filter( { $0.node.name != nil }) {
-            print(result.node.name)
-            if (result.node.name == "0" || result.node.name == "1" || result.node.name == "2" || result.node.name == "3") {
-                self.webView.isHidden = false
-                /*
-                 UIView.transition(with: button, duration: 0.4,
-                 options: .transitionCrossDissolve,
-                 animations: {
-                 button.hidden = false
-                 })
-                 */
-            }
+        selectedNode = results.first?.node
+        performSegue(withIdentifier: "showDetails", sender: nil)
+        
+//        for result in results.filter( { $0.node.name != nil }) {
+//
+//        }
+        
+    }
+    
+    private var selectedNode: SCNNode?
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let destinationVC = segue.destination as? DetailsViewController {
+            
         }
     }
     
+    private var arHelper: ARPlaceMenthelper?
+    private var selectedPageNumber = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        UIApplication.shared.isIdleTimerDisabled = true
-        self.webView.isHidden = true
-        webView.translatesAutoresizingMaskIntoConstraints = false
-        self.view.addSubview(self.webView)
-        // You can set constant space for Left, Right, Top and Bottom Anchors
-        NSLayoutConstraint.activate([
-            self.webView.leftAnchor.constraint(equalTo: self.view.leftAnchor),
-            self.webView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor),
-            self.webView.rightAnchor.constraint(equalTo: self.view.rightAnchor),
-            self.webView.topAnchor.constraint(equalTo: self.view.topAnchor),
-        ])
-        
-        self.view.setNeedsLayout()
-        let request = URLRequest(url: URL.init(string: "https://www.google.com")!)
-        self.webView.load(request)
-        
+        UIApplication.shared.isIdleTimerDisabled = true        
         registerGestureRecognizer()
-        let configuration = ARWorldTrackingConfiguration()
         configuration.isAutoFocusEnabled = false
         sceneView.session.delegate = self
         self.sceneView.session.run(configuration)
         
         let arHelper = ARPlaceMenthelper.init(numberOfImages: Int(numberOfImages), length: Float(length), width: Float(width), configuration: configurationPicked)
-        placeObjects.isEnabled = false
-        arHelper.getObjectsForConfigurations { (nodes) in
+        self.arHelper = arHelper
+        self.arHelper?.getObjectsForConfigurations(pageNumber: selectedPageNumber, loadedHandler: { nodes in
             DispatchQueue.main.async {
                 self.placeObjects.isEnabled = true
                 self.nodes = nodes
             }
-        }
+        })
+        placeObjects.isEnabled = false
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -110,12 +97,38 @@ class GoParkViewController: UIViewController {
                 pictureNode?.geometry?.firstMaterial?.diffuse.contents = #imageLiteral(resourceName: "photo3")
             }
         } else {
+            for nNode in self.nodes {
+                self.sceneView.scene.rootNode.addChildNode(nNode)
+            }
+            sender.setTitle("Load Images", for: .normal)
+        }
+    }
+    
+    @IBAction func loadNextImages(_ sender: UIButton) {
+        if ((self.arHelper?.getObjectsForConfigurations(pageNumber: selectedPageNumber + 1, loadedHandler: { nodes in
             DispatchQueue.main.async {
+                self.placeObjects.isEnabled = true
+                self.nodes = nodes
                 for nNode in self.nodes {
                     self.sceneView.scene.rootNode.addChildNode(nNode)
                 }
-                sender.setTitle("Load Images", for: .normal)
             }
+        })) ?? false) {
+            self.selectedPageNumber += 1
+        }
+    }
+    
+    @IBAction func loadPreviousImages(_ sender: UIButton) {
+        if ((self.arHelper?.getObjectsForConfigurations(pageNumber: selectedPageNumber - 1, loadedHandler: { nodes in
+            DispatchQueue.main.async {
+                self.placeObjects.isEnabled = true
+                self.nodes = nodes
+                for nNode in self.nodes {
+                    self.sceneView.scene.rootNode.addChildNode(nNode)
+                }
+            }
+        })) ?? false) {
+            self.selectedPageNumber -= 1
         }
     }
 }
@@ -124,7 +137,6 @@ class GoParkViewController: UIViewController {
 extension GoParkViewController: ARSessionDelegate {
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
         if frame.camera.trackingState.recommendation == "TRACKING LIMITED" {
-            let configuration = ARWorldTrackingConfiguration()
             configuration.isAutoFocusEnabled = false
             self.sceneView.session.run(configuration)
         }

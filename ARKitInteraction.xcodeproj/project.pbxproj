@@ -30,6 +30,8 @@
 		ED46BF932431F070006FA846 /* ExhibitionCollectionViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = ED46BF912431F070006FA846 /* ExhibitionCollectionViewCell.xib */; };
 		ED46BF942431F070006FA846 /* ExhibitionCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED46BF922431F070006FA846 /* ExhibitionCollectionViewCell.swift */; };
 		ED5C0AF72484E6050012FAAA /* LandingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED5C0AF62484E6050012FAAA /* LandingViewController.swift */; };
+		ED63F4B02496E11400128A4C /* DetailsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED63F4AF2496E11400128A4C /* DetailsViewController.swift */; };
+		ED63F4B22496E65800128A4C /* SinglePainitngViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED63F4B12496E65800128A4C /* SinglePainitngViewController.swift */; };
 		ED693C11247BFA3A0089D4A3 /* GoParkViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED693C10247BFA390089D4A3 /* GoParkViewController.swift */; };
 		ED693C13247BFA450089D4A3 /* GoParkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED693C12247BFA450089D4A3 /* GoParkManager.swift */; };
 /* End PBXBuildFile section */
@@ -41,7 +43,7 @@
 		147D76491EFC36070000FEBF /* ViewController+ObjectSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+ObjectSelection.swift"; sourceTree = "<group>"; };
 		1488323E1EFC378A0043E0AB /* ViewController+Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ViewController+Actions.swift"; sourceTree = "<group>"; };
 		148832401EFC3B250043E0AB /* FocusSquareSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusSquareSegment.swift; sourceTree = "<group>"; };
-		3929C4881E89EC2C00E00B60 /* ARKitInteraction.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ARKitInteraction.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3929C4881E89EC2C00E00B60 /* DiscoverPOC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DiscoverPOC.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3929C48B1E89EC2C00E00B60 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3929C48D1E89EC2C00E00B60 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		3929C4901E89EC2C00E00B60 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -66,6 +68,8 @@
 		ED46BF912431F070006FA846 /* ExhibitionCollectionViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ExhibitionCollectionViewCell.xib; sourceTree = "<group>"; };
 		ED46BF922431F070006FA846 /* ExhibitionCollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExhibitionCollectionViewCell.swift; sourceTree = "<group>"; };
 		ED5C0AF62484E6050012FAAA /* LandingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandingViewController.swift; sourceTree = "<group>"; };
+		ED63F4AF2496E11400128A4C /* DetailsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailsViewController.swift; sourceTree = "<group>"; };
+		ED63F4B12496E65800128A4C /* SinglePainitngViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SinglePainitngViewController.swift; sourceTree = "<group>"; };
 		ED693C10247BFA390089D4A3 /* GoParkViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoParkViewController.swift; sourceTree = "<group>"; };
 		ED693C12247BFA450089D4A3 /* GoParkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoParkManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -134,6 +138,8 @@
 				ED693C10247BFA390089D4A3 /* GoParkViewController.swift */,
 				ED693C12247BFA450089D4A3 /* GoParkManager.swift */,
 				ED5C0AF62484E6050012FAAA /* LandingViewController.swift */,
+				ED63F4B12496E65800128A4C /* SinglePainitngViewController.swift */,
+				ED63F4AF2496E11400128A4C /* DetailsViewController.swift */,
 				11063F3B1EBE651B0033EE6D /* README.md */,
 				3929C48A1E89EC2C00E00B60 /* ARKitInteraction */,
 				3929C4891E89EC2C00E00B60 /* Products */,
@@ -147,7 +153,7 @@
 		3929C4891E89EC2C00E00B60 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				3929C4881E89EC2C00E00B60 /* ARKitInteraction.app */,
+				3929C4881E89EC2C00E00B60 /* DiscoverPOC.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -225,7 +231,7 @@
 			);
 			name = ARKitInteraction;
 			productName = ARKitInteraction;
-			productReference = 3929C4881E89EC2C00E00B60 /* ARKitInteraction.app */;
+			productReference = 3929C4881E89EC2C00E00B60 /* DiscoverPOC.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -295,12 +301,14 @@
 				E187105E2253C46A003B54DA /* ViewController+CoachingOverlay.swift in Sources */,
 				C8C12A711F29277B00B011FE /* ViewController+ARSCNViewDelegate.swift in Sources */,
 				ED693C13247BFA450089D4A3 /* GoParkManager.swift in Sources */,
+				ED63F4B02496E11400128A4C /* DetailsViewController.swift in Sources */,
 				C8C2AC521F3A545C00E86BA3 /* VirtualObjectInteraction.swift in Sources */,
 				C46356671EF9CC500080C8D9 /* VirtualObjectARView.swift in Sources */,
 				148832411EFC3B250043E0AB /* FocusSquareSegment.swift in Sources */,
 				C8D71A001F3B7D3D0086AD64 /* VirtualObject.swift in Sources */,
 				C42A71BD1E9C0AF200944367 /* FocusSquare.swift in Sources */,
 				3929C48C1E89EC2C00E00B60 /* AppDelegate.swift in Sources */,
+				ED63F4B22496E65800128A4C /* SinglePainitngViewController.swift in Sources */,
 				ED693C11247BFA3A0089D4A3 /* GoParkViewController.swift in Sources */,
 				ED5C0AF72484E6050012FAAA /* LandingViewController.swift in Sources */,
 				C46356681EF9CC530080C8D9 /* VirtualObjectLoader.swift in Sources */,
@@ -446,12 +454,13 @@
 				CODE_SIGN_IDENTITY = "-";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1.1;
 				DEVELOPMENT_TEAM = KYUFY77LW7;
 				INFOPLIST_FILE = "$(SRCROOT)/ARKitInteraction/Resources/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.redeye.studio.Discover;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.redeye.studio.discover.poc;
+				PRODUCT_NAME = DiscoverPOC;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;
@@ -468,12 +477,13 @@
 				CODE_SIGN_IDENTITY = "-";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1.1;
 				DEVELOPMENT_TEAM = KYUFY77LW7;
 				INFOPLIST_FILE = "$(SRCROOT)/ARKitInteraction/Resources/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.redeye.studio.Discover;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.redeye.studio.discover.poc;
+				PRODUCT_NAME = DiscoverPOC;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;

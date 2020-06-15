@@ -41,19 +41,52 @@ class ARPlaceMenthelper {
     var width: Float = 0.0
     var configuration = PlacementConfiguration.center
     
-//    let colors = [UIColor.red, UIColor.green, UIColor.blue, UIColor.black, UIColor.gray, UIColor.white]
+    var loadingIndex = 0
+    private var numberOfPages = 1
+    
+    let colors = [UIColor.red, UIColor.green, UIColor.blue, UIColor.black, UIColor.gray, UIColor.white]
+    
+    func getSinglePictureFrame(loaded: @escaping (SCNNode) -> ()) {
+        DispatchQueue.global(qos: .userInitiated).sync {
+            if let node = ObjectLoaderHelper.getNode() {
+                node.position = SCNVector3.init(1.0, 0, 1.0)
+//                var rotationAngle = theta
+//                if (theta >= 0 && theta <= pie / 2) {
+//                    rotationAngle = pie / 2 - rotationAngle
+//                } else if (theta >= pie / 2 && theta < pie) {
+//                    rotationAngle = -rotationAngle + .pi / 2
+//                } else if (theta >= pie && theta < 3 * pie / 2) {
+//                    rotationAngle = -rotationAngle + (3 * pie / 2 + pie)
+//                } else if (theta >= 3 * pie / 2 && theta < 2 * pie) {
+//                    rotationAngle = -rotationAngle + (3 * pie / 2 + pie)
+//                }
+//                backgroundNode?.geometry?.firstMaterial?.diffuse.contents = UIColor.purple
+//                node.eulerAngles.y = Float(rotationAngle)
+//                node.scale = SCNVector3(x: scale, y: scale, z: scale)
+//                nodes.append(node)
+                loaded(node)
+            }
+        }
+    }
+    
+    init() {}
     
     init(numberOfImages:Int, length: Float, width: Float, configuration: Int) {
         self.numberOfImages = numberOfImages
         self.length = length
         self.width = width
         if configuration == 0 {
-           self.configuration = PlacementConfiguration.init(rawValue: 0) ?? PlacementConfiguration.center
+            self.configuration = PlacementConfiguration.init(rawValue: 0) ?? PlacementConfiguration.center
         } else if configuration == 1 {
             self.configuration = PlacementConfiguration.init(rawValue: 1) ?? PlacementConfiguration.center
         } else if configuration == 2  {
             self.configuration = PlacementConfiguration.init(rawValue: 5) ?? PlacementConfiguration.center
         }
+        
+        var numberOfPagesTemp = getNumberOfPages()
+        numberOfPagesTemp.round(.up)
+        let val = numberOfPagesTemp.magnitude
+        self.numberOfPages = Int(val)
     }
     
     func getRadius() -> CGFloat {
@@ -75,17 +108,20 @@ class ARPlaceMenthelper {
         } else if configuration == .center {
             angleToPlace *= 2
         }
-        return angleToPlace / Float(numberOfImages)
+        return angleToPlace / Float(getNumberOfImagesForPage())
     }
     
-    func getObjectsForConfigurations(loadedHandler: @escaping ([SCNNode]) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async {
+    @discardableResult func getObjectsForConfigurations(pageNumber: Int, loadedHandler: @escaping ([SCNNode]) -> Void) -> Bool {
+        print (self.numberOfPages)
+        if !(pageNumber >= 0 && pageNumber <= self.numberOfPages) {
+            return false
+        }
+        DispatchQueue.global(qos: .userInitiated).sync {
             var nodes: [SCNNode] = []
             let radius = self.getRadius()
             let angularPlacement = CGFloat(self.getAngualarPlacementAngle())
             var startingAngle : CGFloat = 0
             let scale = Float(self.getScaleMultiplier())
-            print (scale)
             if self.configuration == .center {
                 startingAngle = 0
             } else if self.configuration.isQuarterConfiguration() {
@@ -93,12 +129,12 @@ class ARPlaceMenthelper {
                     startingAngle = 3 * pie / 2
                 }else if self.configuration == .corner2Quarter {
                     startingAngle = 3 * pie / 2
-//                    startingAngle = pie / 2
+                    //                    startingAngle = pie / 2
                 } else if self.configuration == .corner1Quarter {
-//                    startingAngle = 3 * pie / 2
+                    //                    startingAngle = 3 * pie / 2
                     startingAngle = pie
                 } else if self.configuration == .corner3Quarter {
-//                    startingAngle = 3 * pie / 2
+                    //                    startingAngle = 3 * pie / 2
                     startingAngle = pie
                 }
             } else if self.configuration.isLineConfiguration() {
@@ -112,10 +148,11 @@ class ARPlaceMenthelper {
                     startingAngle = pie
                 }
             }
-            for i in 0 ..< self.numberOfImages {
+            
+            for i in 0 ..< self.getNumberOfImagesForPage() {
                 if let node = ObjectLoaderHelper.getNode() {
                     let backgroundNode = node.childNode(withName: "picture", recursively: true)
-                    node.name = "\(i)"
+                    node.name = self.getNodeName(forPageNumber: pageNumber, index: i)
                     let theta = startingAngle + CGFloat(i) * angularPlacement
                     node.position = SCNVector3.init(radius * cos(theta), 0, radius * sin(theta))
                     var rotationAngle = theta
@@ -128,9 +165,9 @@ class ARPlaceMenthelper {
                     } else if (theta >= 3 * pie / 2 && theta < 2 * pie) {
                         rotationAngle = -rotationAngle + (3 * pie / 2 + pie)
                     }
-                    if i == 0 {
-                        backgroundNode?.geometry?.firstMaterial?.diffuse.contents = UIColor.black
-                    }
+                    
+                    backgroundNode?.geometry?.firstMaterial?.diffuse.contents = colors[pageNumber % 6]
+                    
                     node.eulerAngles.y = Float(rotationAngle)
                     node.scale = SCNVector3(x: scale, y: scale, z: scale)
                     nodes.append(node)
@@ -138,6 +175,13 @@ class ARPlaceMenthelper {
             }
             loadedHandler(nodes)
         }
+        return true
+    }
+    
+    
+    
+    private func getNodeName(forPageNumber: Int, index: Int) -> String {
+        return "\((forPageNumber * getNumberOfImagesForPage()) + index)"
     }
     
     private func getCircumference() -> CGFloat {
@@ -153,8 +197,19 @@ class ARPlaceMenthelper {
     }
     
     private func getScaleMultiplier() -> CGFloat {
-        let scale: CGFloat = getCircumference() / (1.5 * CGFloat(self.numberOfImages))
+        let scale: CGFloat = getCircumference() / (1.5 * CGFloat(self.getNumberOfImagesForPage()))
+        if getNumberOfPages() > 1 {
+            return 1.0
+        }
         return scale
+    }
+    
+    private func getNumberOfPages() -> CGFloat {
+        return CGFloat(self.numberOfImages) / (getCircumference() / 1.5)
+    }
+    
+    private func getNumberOfImagesForPage() -> Int {
+        self.numberOfImages / self.numberOfPages
     }
     
 }
